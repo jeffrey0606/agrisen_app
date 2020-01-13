@@ -1,111 +1,191 @@
 import 'package:flutter/material.dart';
+import 'PlantDiseaseDetection/diseaseDetectionPage.dart';
+import 'ProfilePage/notifications.dart';
+import 'bottomAppBar.dart';
+import 'widgets/Drawer/Tiles/AskExpert/askExpert.dart';
+import 'widgets/Drawer/Tiles/DiseaseDtectionHistory/diseaseDetectionHistory.dart';
+import 'widgets/Drawer/Tiles/SteupArticle/setupArticle.dart';
+import 'widgets/FullArticlePage/fullArticlePage.dart';
 
 void main() => runApp(MyApp());
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  /*@override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    final plantdec = PlantsImageDetection();
+    plantdec.loadModel().then((_) {
+      print('ture');
+    });
+  }*/
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
+        fontFamily: 'Comfortaa',
+        accentColor: Color.fromRGBO(237, 245, 252, 1.0),
+        primaryColor: Color.fromRGBO(237, 245, 252, 1.0),
+        appBarTheme: AppBarTheme(
+          color: Color.fromRGBO(237, 245, 252, 1.0),
+          actionsIconTheme: IconThemeData(
+            color: Color.fromRGBO(10, 17, 40, 1.0),
+          ),
+          textTheme: TextTheme(
+            title: TextStyle(
+              color: Color.fromRGBO(10, 17, 40, 1.0),
+              fontSize: 22,
+              fontFamily: 'Comfortaa',
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: CustomBottomAppBar(),
+      routes: {
+        FullArticlePage.nameRoute: (ctx) => FullArticlePage(),
+        DiseaseDetectionPage.nameRoute : (ctx) => DiseaseDetectionPage(),
+        DiseaseDetectionHistory.nameRoute : (ctx) => DiseaseDetectionHistory(),
+        SetupArticle.nameRoute : (ctx) => SetupArticle(),
+        AskExpert.nameRoute : (ctx) => AskExpert(),
+        Notifications.nameRoute: (ctx) => Notifications(),
+      },
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+/*File image;
+  bool _isDetecting = false;
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+  bool _busy = false;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
+  void initState() {
+    // TODO: implement initState
+    super.initState();
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _busy = true;
     });
+    final plantdec = PlantsImageDetection();
+    plantdec.loadModel().then((_) {
+      setState(() {
+        _busy = false;
+      });
+    });
+  }
+
+  void getImage() async {
+    File _image = await ImagePicker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      image = _image;
+    });
+  }
+
+  List<dynamic> _detectedDisease;
+
+  Future<void> detectDisease() async {
+    if (image != null) {
+      setState(() {
+        _isDetecting = true;
+      });
+      PlantsImageDetection imageDetection = PlantsImageDetection(image: image);
+      await imageDetection.diseaseDetection().then((results) async {
+        setState(() {
+          _isDetecting = false;
+          _detectedDisease = results;
+        });
+        print('results : $results');
+        //await Tflite.close();
+      }).catchError((onError) {
+        setState(() {
+          _isDetecting = false;
+        });
+        print('Errors1: $onError');
+      });
+    } else {
+      print('please select an Image');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: _busy
+            ? CircularProgressIndicator()
+            : Column(
+                children: <Widget>[
+                  Expanded(
+                    flex: 3,
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6)),
+                      color: Colors.white12,
+                      child: Container(
+                        alignment: Alignment.center,
+                        child: image == null
+                            ? Icon(
+                                Icons.broken_image,
+                                color: Colors.black12,
+                              )
+                            : Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(6),
+                                  image: DecorationImage(
+                                      image: FileImage(
+                                        image,
+                                      ),
+                                      fit: BoxFit.fill),
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 15,
+                  ),
+                  Expanded(
+                    flex: 4,
+                    child: Container(
+                      child: _isDetecting
+                          ? CircularProgressIndicator()
+                          : _detectedDisease == null
+                              ? Text('no information')
+                              : Text(
+                                  _detectedDisease.toString(),
+                                ),
+                    ),
+                  )
+                ],
+              ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+            FloatingActionButton(
+              onPressed: getImage,
+              tooltip: 'add image',
+              child: Icon(Icons.add),
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
+            FloatingActionButton(
+              onPressed: () => detectDisease(),
+              tooltip: 'detect',
+              child: Icon(Icons.send),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
-  }
-}
+  }*/
