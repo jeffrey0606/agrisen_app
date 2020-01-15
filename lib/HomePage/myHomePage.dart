@@ -16,13 +16,8 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final dummyData = DummyData().dummyData;
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: Text('Agrisensor'),
-      ),
-      backgroundColor: Colors.white,
-      body:
+    return Container(
+      child:
           /*NotificationListener<ScrollNotification>(
         onNotification: (scrollNotification) {
           if (scrollNotification is ScrollStartNotification) {
@@ -62,7 +57,6 @@ class _MyHomePageState extends State<MyHomePage> {
           );
         }),
       ),
-      drawer: DrawerLayout(),
     );
   }
 }

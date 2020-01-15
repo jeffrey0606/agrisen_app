@@ -79,6 +79,7 @@ flutter:
     - assets/SVGPics/profileImage.svg
     - assets/SVGPics/brokenImageIcon.svg
     - assets/SVGPics/pickFromGallery.svg
+    - assets/SVGPics/askcomunity.svg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

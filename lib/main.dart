@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+
 import 'PlantDiseaseDetection/diseaseDetectionPage.dart';
 import 'ProfilePage/notifications.dart';
-import 'bottomAppBar.dart';
-import 'widgets/Drawer/Tiles/AskExpert/askExpert.dart';
+import 'MainAppContainer.dart';
 import 'widgets/Drawer/Tiles/DiseaseDtectionHistory/diseaseDetectionHistory.dart';
 import 'widgets/Drawer/Tiles/SteupArticle/setupArticle.dart';
 import 'widgets/FullArticlePage/fullArticlePage.dart';
@@ -46,13 +46,12 @@ class _MyAppState extends State<MyApp> {
           ),
         ),
       ),
-      home: CustomBottomAppBar(),
+      home: MainAppContainer(),
       routes: {
         FullArticlePage.nameRoute: (ctx) => FullArticlePage(),
         DiseaseDetectionPage.nameRoute : (ctx) => DiseaseDetectionPage(),
         DiseaseDetectionHistory.nameRoute : (ctx) => DiseaseDetectionHistory(),
         SetupArticle.nameRoute : (ctx) => SetupArticle(),
-        AskExpert.nameRoute : (ctx) => AskExpert(),
         Notifications.nameRoute: (ctx) => Notifications(),
       },
     );

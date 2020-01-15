@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class AskExpertForm extends StatelessWidget {
+class AskCommunityForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

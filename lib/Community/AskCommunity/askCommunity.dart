@@ -1,35 +1,33 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 
-import 'askExpertCard.dart';
-import 'askExpertForm.dart';
+import 'askCommunityCard.dart';
+import 'askCommunityForm.dart';
 
-class AskExpert extends StatefulWidget {
+
+class AskCommunity extends StatefulWidget {
   static String nameRoute = 'AskExpert';
 
   @override
-  _AskExpertState createState() => _AskExpertState();
+  _AskCommunityState createState() => _AskCommunityState();
 }
 
-class _AskExpertState extends State<AskExpert> {
+class _AskCommunityState extends State<AskCommunity> {
   File file = File(
       '/storage/emulated/0/Android/data/com.example.agrisensor_app/files/Pictures/image_picker7808531823496174987.PNG');
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Ask Expert'),
-      ),
-      body: ListView.builder(
+    return Container(
+      child: ListView.builder(
         itemCount: 3,
         itemBuilder: (buildContext, index) {
-          return AskExpertCard(
+          return AskCommunityCard(
             file: file,
           );
         },
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      /*floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: FloatingActionButton.extended(
         label: Text(
           'Ask',
@@ -45,10 +43,10 @@ class _AskExpertState extends State<AskExpert> {
         ),
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (builder) => AskExpertForm(),
+            builder: (builder) => AskCommunityForm(),
           ),
         ),
-      ),
+      ),*/
     );
   }
 }

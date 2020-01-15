@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'Tiles/AskExpert/askExpert.dart';
 import 'Tiles/DiseaseDtectionHistory/diseaseDetectionHistory.dart';
 import 'Tiles/SteupArticle/setupArticle.dart';
 
@@ -55,9 +54,10 @@ class DrawerLayout extends StatelessWidget {
               ),
             ),
             ListTile(
-              onTap: () => Navigator.of(context).pushNamed(DiseaseDetectionHistory.nameRoute),
+              onTap: () => Navigator.of(context)
+                  .pushNamed(DiseaseDetectionHistory.nameRoute),
               leading: ImageIcon(
-                AssetImage('assets/runtestIcon.png'),
+                AssetImage('assets/runTestIcon.png'),
                 color: Color.fromRGBO(10, 17, 40, 1.0),
                 size: 30,
               ),
@@ -67,7 +67,8 @@ class DrawerLayout extends StatelessWidget {
               ),
             ),
             ListTile(
-              onTap: () => Navigator.of(context).pushNamed(SetupArticle.nameRoute),
+              onTap: () =>
+                  Navigator.of(context).pushNamed(SetupArticle.nameRoute),
               leading: Icon(
                 Icons.mode_edit,
                 color: Color.fromRGBO(10, 17, 40, 1.0),
@@ -75,18 +76,6 @@ class DrawerLayout extends StatelessWidget {
               ),
               title: Text(
                 'Setup Article',
-                style: TextStyle(color: Color.fromRGBO(10, 17, 40, 1.0)),
-              ),
-            ),
-            ListTile(
-              onTap: () => Navigator.of(context).pushNamed(AskExpert.nameRoute),
-              leading: Icon(
-                Icons.comment,
-                color: Color.fromRGBO(10, 17, 40, 1.0),
-                size: 30,
-              ),
-              title: Text(
-                'Ask Expert',
                 style: TextStyle(color: Color.fromRGBO(10, 17, 40, 1.0)),
               ),
             ),

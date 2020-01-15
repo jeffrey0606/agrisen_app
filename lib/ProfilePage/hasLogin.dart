@@ -4,17 +4,13 @@ import 'package:intl/intl.dart';
 import 'notifications.dart';
 
 class HasLogin extends StatelessWidget {
-  final AppBar appBar;
-
-  HasLogin({this.appBar});
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
       child: SingleChildScrollView(
         child: Container(
-          height: MediaQuery.of(context).size.height -
-              appBar.preferredSize.height / 3,
+          height: MediaQuery.of(context).size.height - 56 / 3,
           child: Column(
             children: <Widget>[
               Container(
@@ -146,22 +142,26 @@ class _MeState extends State<Me> {
                 Expanded(
                   flex: 1,
                   child: RichText(
-                    text: TextSpan(children: [
-                      TextSpan(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
                           text: 'expires : ',
                           style: TextStyle(
                             color: Colors.red,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                          )),
-                      TextSpan(
+                          ),
+                        ),
+                        TextSpan(
                           text:
                               '${dateTime.format(DateTime.now().add(Duration(days: 31)))}',
                           style: TextStyle(
                             color: Colors.black,
                             fontSize: 16,
-                          )),
-                    ]),
+                          ),
+                        ),
+                      ],
+                    ),
                     overflow: TextOverflow.ellipsis,
                     softWrap: true,
                     maxLines: 3,
@@ -172,35 +172,6 @@ class _MeState extends State<Me> {
           ),
           SizedBox(
             height: 15,
-          ),
-          ListTile(
-            onTap: () =>
-                Navigator.of(context).pushNamed(Notifications.nameRoute),
-            leading: Icon(
-              Icons.notifications_active,
-              color: Color.fromRGBO(10, 17, 40, 1.0),
-              size: 30,
-            ),
-            title: Text(
-              'Notifications',
-              style: TextStyle(
-                color: Color.fromRGBO(10, 17, 40, 1.0),
-                fontSize: 18,
-              ),
-            ),
-            trailing: CircleAvatar(
-              backgroundColor: Colors.red,
-              maxRadius: 10.0,
-              child: FittedBox(
-                child: Text(
-                  '5',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
           ),
         ],
       ),

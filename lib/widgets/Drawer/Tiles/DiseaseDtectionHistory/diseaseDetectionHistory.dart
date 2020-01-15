@@ -128,7 +128,7 @@ class _DiseaseDetectionHistoryState extends State<DiseaseDetectionHistory> {
                                 child: Row(
                                   children: <Widget>[
                                     Image.asset(
-                                      'assets/testImage1.jpg',
+                                      'assets/testImage1.JPG',
                                       fit: BoxFit.cover,
                                       height: 90,
                                       width: 110,

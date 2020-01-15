@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
-class AskExpertCard extends StatelessWidget {
+class AskCommunityCard extends StatelessWidget {
   final File file;
-  AskExpertCard({this.file});
+  AskCommunityCard({this.file});
 
   Future<void> delete(BuildContext context) {
     return showDialog<void>(
