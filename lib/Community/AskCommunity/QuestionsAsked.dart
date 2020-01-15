@@ -5,14 +5,13 @@ import 'askCommunityCard.dart';
 import 'askCommunityForm.dart';
 
 
-class AskCommunity extends StatefulWidget {
+class QuestionsAsked extends StatefulWidget {
   static String nameRoute = 'AskExpert';
 
-  @override
-  _AskCommunityState createState() => _AskCommunityState();
+  @override _QuestionsAskedState createState() => _QuestionsAskedState();
 }
 
-class _AskCommunityState extends State<AskCommunity> {
+class _QuestionsAskedState extends State<QuestionsAsked> {
   File file = File(
       '/storage/emulated/0/Android/data/com.example.agrisensor_app/files/Pictures/image_picker7808531823496174987.PNG');
 

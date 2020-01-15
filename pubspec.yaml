@@ -80,6 +80,7 @@ flutter:
     - assets/SVGPics/brokenImageIcon.svg
     - assets/SVGPics/pickFromGallery.svg
     - assets/SVGPics/askcomunity.svg
+    - assets/backiee-117476-landscape.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

@@ -45,7 +45,7 @@ class _MainAppContainerState extends State<MainAppContainer> {
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
               'assets/SVGPics/askcomunity.svg',
-              height: _currentTab == 1 ? 30 : 20,
+              height: _currentTab == 1 ? 30 : 25,
               color: _currentTab == 1 ? Color.fromRGBO(10, 17, 40, 1.0) : Colors.grey,
             ),
             title: Text('community'),

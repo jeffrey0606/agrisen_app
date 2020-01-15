@@ -1,6 +1,7 @@
-import 'package:agrisen_app/Community/AskCommunity/askCommunity.dart';
-import 'package:agrisen_app/Community/AskCommunity/commented.dart';
 import 'package:flutter/material.dart';
+
+import 'AskCommunity/QuestionsAsked.dart';
+import 'Commented/commented.dart';
 
 class Community extends StatelessWidget {
   @override
@@ -8,26 +9,18 @@ class Community extends StatelessWidget {
     return DefaultTabController(
       initialIndex: 0,
       length: 2,
-      child: Stack(
-        children: <Widget>[
-          Container(
-            padding: EdgeInsets.only(top: AppBar().preferredSize.height * 1.7),
-            child: TabBarView(
-              children: <Widget>[
-                AskCommunity(),
-                Commented(),
-              ],
-            ),
-          ),
-          Positioned(
-            top: 0,
-            right: 0,
-            left: 0,
-            child: Container(
-              height: AppBar().preferredSize.height * 2.3,
-              child: AppBar(
+      child: SafeArea(
+        child: NestedScrollView(
+          headerSliverBuilder: (context, boxIsScrolled) {
+            return <Widget>[
+              SliverAppBar(
+                forceElevated: true,
+                floating: true,
+                pinned: true,
+                snap: true,
                 title: Text('Community'),
                 centerTitle: true,
+                expandedHeight: AppBar().preferredSize.height * 1.8,
                 bottom: TabBar(
                   indicatorColor: Colors.blue,
                   indicatorPadding: EdgeInsets.symmetric(horizontal: 60),
@@ -44,14 +37,50 @@ class Community extends StatelessWidget {
                       text: 'Questions Asked',
                     ),
                     Tab(
-                      text: 'Commented',
-                    )
+                        child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: <Widget>[
+                        Text('Commented'),
+                        SizedBox(
+                          height: 20,
+                          child: Container(
+                            alignment: Alignment.center,
+                            padding: EdgeInsets.all(3),
+                            constraints: BoxConstraints(
+                              minWidth: 20,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(
+                                25,
+                              ),
+                            ),
+                            child: FittedBox(
+                              child: Text(
+                                '13',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ))
                   ],
                 ),
               ),
-            ),
-          )
-        ],
+            ];
+          },
+          body: TabBarView(
+            children: <Widget>[
+              QuestionsAsked(),
+              Commented(),
+            ],
+          ),
+        ),
       ),
     );
   }
