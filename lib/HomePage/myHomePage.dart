@@ -1,7 +1,6 @@
 import 'package:agrisen_app/Providers/dummyData.dart';
-import 'package:agrisen_app/widgets/ArticleCard/ArticleCard.dart';
-import 'package:agrisen_app/widgets/Drawer/Drawer.dart';
-import 'package:agrisen_app/widgets/FullArticlePage/fullArticlePage.dart';
+import '../widgets/Articles/ArticleCard.dart';
+import '../widgets/Articles/fullArticlePage.dart';
 import 'package:flutter/material.dart';
 
 import 'homePageTopPart.dart';

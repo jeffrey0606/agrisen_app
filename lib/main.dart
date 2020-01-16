@@ -4,8 +4,7 @@ import 'PlantDiseaseDetection/diseaseDetectionPage.dart';
 import 'ProfilePage/notifications.dart';
 import 'MainAppContainer.dart';
 import 'widgets/Drawer/Tiles/DiseaseDtectionHistory/diseaseDetectionHistory.dart';
-import 'widgets/Drawer/Tiles/SteupArticle/setupArticle.dart';
-import 'widgets/FullArticlePage/fullArticlePage.dart';
+import 'widgets/Articles/fullArticlePage.dart';
 
 void main() => runApp(MyApp());
 
@@ -51,7 +50,6 @@ class _MyAppState extends State<MyApp> {
         FullArticlePage.nameRoute: (ctx) => FullArticlePage(),
         DiseaseDetectionPage.nameRoute : (ctx) => DiseaseDetectionPage(),
         DiseaseDetectionHistory.nameRoute : (ctx) => DiseaseDetectionHistory(),
-        SetupArticle.nameRoute : (ctx) => SetupArticle(),
         Notifications.nameRoute: (ctx) => Notifications(),
       },
     );

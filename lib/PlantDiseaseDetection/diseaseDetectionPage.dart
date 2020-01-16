@@ -4,9 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'notPremium.dart';
-import 'premium.dart';
-
 
 class DiseaseDetectionPage extends StatefulWidget {
   static const nameRoute = 'DiseaseDetectionPage';
@@ -130,7 +127,7 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
       body: CustomScrollView(
         slivers: <Widget>[
           SliverAppBar(
-            title: Text('Health Check'),
+            title: Text('Disease Check'),
             expandedHeight: 200,
             forceElevated: true,
             pinned: true,
@@ -189,7 +186,6 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
                       ),
                     ),
                   ),
-                  _hasRegisteredForPremium ? Premium() : NotPremium(),
                 ],
               ),
             ),

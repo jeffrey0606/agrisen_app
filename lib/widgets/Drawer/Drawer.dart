@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'Tiles/DiseaseDtectionHistory/diseaseDetectionHistory.dart';
-import 'Tiles/SteupArticle/setupArticle.dart';
 
 class DrawerLayout extends StatelessWidget {
   @override
@@ -63,19 +62,6 @@ class DrawerLayout extends StatelessWidget {
               ),
               title: Text(
                 'Disease detection history',
-                style: TextStyle(color: Color.fromRGBO(10, 17, 40, 1.0)),
-              ),
-            ),
-            ListTile(
-              onTap: () =>
-                  Navigator.of(context).pushNamed(SetupArticle.nameRoute),
-              leading: Icon(
-                Icons.mode_edit,
-                color: Color.fromRGBO(10, 17, 40, 1.0),
-                size: 30,
-              ),
-              title: Text(
-                'Setup Article',
                 style: TextStyle(color: Color.fromRGBO(10, 17, 40, 1.0)),
               ),
             ),
