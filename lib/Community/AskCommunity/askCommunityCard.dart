@@ -1,12 +1,11 @@
 import 'dart:io';
 
-import 'package:agrisen_app/MyCustomBadge.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
 
 class AskCommunityCard extends StatelessWidget {
   final File file;
-  AskCommunityCard({this.file});
+  final Function onTap;
+  AskCommunityCard({this.file, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +13,7 @@ class AskCommunityCard extends StatelessWidget {
       margin: EdgeInsets.only(top: 5.0, left: 0, right: 0, bottom: 5),
       child: Card(
         child: InkWell(
-          onTap: () => null,
+          onTap: () => onTap(),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(5),
             child: Container(

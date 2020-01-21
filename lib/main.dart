@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'PlantDiseaseDetection/diseaseDetectionPage.dart';
 import 'ProfilePage/notifications.dart';
 import 'MainAppContainer.dart';
-import 'widgets/Drawer/Tiles/DiseaseDtectionHistory/diseaseDetectionHistory.dart';
 import 'widgets/Articles/fullArticlePage.dart';
+import './Community/CommentingPage/commentingPage.dart';
+import './Community/AskCommunity/askCommunityForm.dart';
+
 
 void main() => runApp(MyApp());
 
@@ -29,7 +31,7 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         fontFamily: 'Comfortaa',
         accentColor: Color.fromRGBO(237, 245, 252, 1.0),
-        primaryColor: Color.fromRGBO(237, 245, 252, 1.0),
+        //primaryColor: Color.fromRGBO(237, 245, 252, 1.0),
         appBarTheme: AppBarTheme(
           color: Color.fromRGBO(237, 245, 252, 1.0),
           actionsIconTheme: IconThemeData(
@@ -49,8 +51,9 @@ class _MyAppState extends State<MyApp> {
       routes: {
         FullArticlePage.nameRoute: (ctx) => FullArticlePage(),
         DiseaseDetectionPage.nameRoute : (ctx) => DiseaseDetectionPage(),
-        DiseaseDetectionHistory.nameRoute : (ctx) => DiseaseDetectionHistory(),
         Notifications.nameRoute: (ctx) => Notifications(),
+        CommentingPage.routeName: (ctx) => CommentingPage(),
+        AskCommunityForm.routeName: (ctx) => AskCommunityForm(),
       },
     );
   }

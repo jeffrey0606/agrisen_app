@@ -1,4 +1,5 @@
 import 'package:agrisen_app/Providers/dummyData.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -37,20 +38,16 @@ class _HomePageTopPartState extends State<HomePageTopPart> {
               children: <Widget>[
                 Container(
                   width: double.infinity,
-                  /*child: CarouselSlider(
+                  child: CarouselSlider(
                     initialPage: 0,
                     enableInfiniteScroll: true,
-                    reverse: false,
                     autoPlay: true,
                     viewportFraction: 1.0,
-                    autoPlayInterval: Duration(seconds: 3),
-                    autoPlayAnimationDuration: Duration(milliseconds: 800),
-                    autoPlayCurve: Curves.fastOutSlowIn,
                     pauseAutoPlayOnTouch: Duration(seconds: 10),
                     enlargeCenterPage: true,
                     onPageChanged: (index) {
                       setState(() {
-                        _currentPageIndex = index;
+                        //_currentPageIndex = index;
                       });
                     },
                     scrollDirection: Axis.horizontal,
@@ -66,7 +63,7 @@ class _HomePageTopPartState extends State<HomePageTopPart> {
                         },
                       );
                     }).toList(),
-                  ),*/
+                  ),
                 ),
                 Positioned(
                   bottom: 0,

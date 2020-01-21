@@ -6,7 +6,7 @@ import 'hasNotLogin.dart';
 class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    bool _isLogin = true;
+    bool _isLogin = false;
 
     return Container(
       child: _isLogin ? HasLogin() : HasNotLogin(),

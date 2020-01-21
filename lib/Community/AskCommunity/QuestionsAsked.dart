@@ -2,7 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'askCommunityCard.dart';
-import 'askCommunityForm.dart';
+import '../CommentingPage/commentingPage.dart';
+
 
 
 class QuestionsAsked extends StatefulWidget {
@@ -21,8 +22,11 @@ class _QuestionsAskedState extends State<QuestionsAsked> {
       child: ListView.builder(
         itemCount: 3,
         itemBuilder: (buildContext, index) {
-          return AskCommunityCard(
-            file: file,
+          return Container(
+            child: AskCommunityCard(
+              file: file,
+              onTap: () => Navigator.pushNamed(context, CommentingPage.routeName),
+            ),
           );
         },
       ),

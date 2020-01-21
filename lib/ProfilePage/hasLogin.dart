@@ -1,9 +1,60 @@
+import 'dart:io';
+
+import 'package:image_picker/image_picker.dart';
+
+import '../pickImage.dart';
+
+import '../Providers/uploadFilesToServer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../pickImage.dart';
 import 'package:intl/intl.dart';
-import 'notifications.dart';
+import './notifications.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
-class HasLogin extends StatelessWidget {
+class HasLogin extends StatefulWidget {
+  @override
+  _HasLoginState createState() => _HasLoginState();
+}
+
+class _HasLoginState extends State<HasLogin> {
+  File image;
+  bool isUploading = false;
+  String imageUrl;
+
+  void getImage(ImageSource imageSource) async {
+    File _image = await ImagePicker.pickImage(source: imageSource);
+    /*var targetPath = '${_image.path.substring(0,_image.path.length - 6)}${Random().nextInt(200)}${DateTime.now().toIso8601String()}${_image.path.substring(_image.path.length - 4)}';
+    var result = await FlutterImageCompress.compressAndGetFile(_image.absolute.path, targetPath, quality: 50);*/
+    setState(() {
+      image = _image;
+      print(image);
+    });
+
+    uploadProfileImage();
+  }
+
+  void uploadProfileImage() async {
+    if (image != null) {
+      isUploading = true;
+      final upload = UploadFilesToServer(filePath: image.path);
+
+      await upload.uploadFilesToServer().then((url) {
+        print('url: $url');
+        setState(() {
+          imageUrl = url;
+          isUploading = false;
+        });
+      }).catchError((onError) {
+        print(onError);
+        setState(() {
+          image = null;
+          isUploading = false;
+        });
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -18,10 +69,38 @@ class HasLogin extends StatelessWidget {
                 padding: EdgeInsets.all(10.0),
                 child: Row(
                   children: <Widget>[
-                    CircleAvatar(
-                      child:
-                          SvgPicture.asset('assets/SVGPics/profileImage.svg'),
-                      maxRadius: 50,
+                    InkWell(
+                      onTap: () =>
+                          PickImage.galleryOrCameraPick(context, getImage),
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(50),
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: imageUrl == null
+                              ? null
+                              : Border.all(
+                                  color: Colors.blue,
+                                  width: 2,
+                                ),
+                          borderRadius: BorderRadius.circular(70),
+                        ),
+                        child: CircleAvatar(
+                          maxRadius: 55,
+                          backgroundImage: imageUrl == null
+                              ? null
+                              : NetworkImage(
+                                  imageUrl,
+                                ),
+                          child: isUploading
+                              ? CircularProgressIndicator()
+                              : imageUrl == null
+                                  ? SvgPicture.asset(
+                                      'assets/SVGPics/profileImage.svg',
+                                    )
+                                  : null,
+                        ),
+                      ),
                     ),
                     SizedBox(
                       width: 15,
@@ -72,18 +151,80 @@ class HasLogin extends StatelessWidget {
                 ),
                 tabs: <Widget>[
                   Tab(
-                    text: 'me',
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: <Widget>[
+                        Text('Notifications'),
+                        SizedBox(
+                          height: 20,
+                          child: Container(
+                            alignment: Alignment.center,
+                            padding: EdgeInsets.all(3),
+                            constraints: BoxConstraints(
+                              minWidth: 20,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(
+                                25,
+                              ),
+                            ),
+                            child: FittedBox(
+                              child: Text(
+                                '3',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   Tab(
-                    text: 'Transactions',
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: <Widget>[
+                        Text('History'),
+                        SizedBox(
+                          height: 20,
+                          child: Container(
+                            alignment: Alignment.center,
+                            padding: EdgeInsets.all(3),
+                            constraints: BoxConstraints(
+                              minWidth: 20,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(
+                                25,
+                              ),
+                            ),
+                            child: FittedBox(
+                              child: Text(
+                                '1',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
               Expanded(
                 child: TabBarView(
                   children: <Widget>[
-                    Me(),
-                    Transactions(),
+                    NotificationTab(),
+                    DiseaseCheckHistory(),
                   ],
                 ),
               )
@@ -95,98 +236,55 @@ class HasLogin extends StatelessWidget {
   }
 }
 
-class Me extends StatefulWidget {
+class NotificationTab extends StatefulWidget {
   @override
-  _MeState createState() => _MeState();
+  _NotificationTabState createState() => _NotificationTabState();
 }
 
-class _MeState extends State<Me> {
+class _NotificationTabState extends State<NotificationTab> {
   var dateTime = DateFormat('yMd').add_jms();
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        children: <Widget>[
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 5),
-            height: 50,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Expanded(
-                  flex: 1,
-                  child: RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                            text: 'starts : ',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            )),
-                        TextSpan(
-                          text: '${dateTime.format(DateTime.now())}',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    softWrap: true,
-                    maxLines: 3,
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'expires : ',
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        TextSpan(
-                          text:
-                              '${dateTime.format(DateTime.now().add(Duration(days: 31)))}',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    softWrap: true,
-                    maxLines: 3,
-                  ),
-                ),
-              ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 15.0),
+      child: ListView.separated(
+        separatorBuilder: (context, index) => SizedBox(
+          height: 15,
+        ),
+        itemCount: 3,
+        itemBuilder: (context, index) {
+          return ListTile(
+            onTap: () => Navigator.of(context).pushNamed(Notifications.nameRoute),
+            leading: CircleAvatar(
+              maxRadius: 30,
             ),
-          ),
-          SizedBox(
-            height: 15,
-          ),
-        ],
+            title: Text(
+              'Message :',
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+            ),
+            subtitle: Text(
+              'from :',
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          );
+        },
       ),
     );
   }
 }
 
-class Transactions extends StatefulWidget {
+class DiseaseCheckHistory extends StatefulWidget {
   @override
-  _TransactionsState createState() => _TransactionsState();
+  _DiseaseCheckHistoryState createState() => _DiseaseCheckHistoryState();
 }
 
-class _TransactionsState extends State<Transactions> {
+class _DiseaseCheckHistoryState extends State<DiseaseCheckHistory> {
   bool _showMore = false, _isAHistoryIsOpen = false;
+
   int _currentIndex = 0;
+
   var dateTime = DateFormat('yMd').add_jms().format(DateTime.now());
 
   void _show(int index) {
@@ -225,6 +323,62 @@ class _TransactionsState extends State<Transactions> {
         itemBuilder: (context, index) {
           return Column(
             children: <Widget>[
+              if (index == 0)
+                Column(
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Text(
+                        'Disease Checked History',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          top: 8.0, right: 8.0, left: 8.0),
+                      child: Card(
+                        elevation: 5,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Container(
+                          height: 50,
+                          padding: EdgeInsets.symmetric(
+                              vertical: 8.0, horizontal: 25),
+                          decoration: BoxDecoration(
+                            color: Colors.greenAccent,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                'Total :',
+                                style: TextStyle(
+                                  color: Color.fromRGBO(10, 17, 40, 1.0),
+                                  fontSize: 18,
+                                ),
+                              ),
+                              Text(
+                                '3',
+                                style: TextStyle(
+                                  color: Color.fromRGBO(10, 17, 40, 1.0),
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               AnimatedContainer(
                 height: _currentIndex == index ? _showMore ? 100 : 50 : 50,
                 duration: Duration(milliseconds: 200),

@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class DummyData {
   List<DummyDataModel> _data = [
     DummyDataModel(

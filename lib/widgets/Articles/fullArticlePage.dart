@@ -12,6 +12,9 @@ class FullArticlePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(articleData.title),
+        iconTheme: IconThemeData(
+          color: Color.fromRGBO(10, 17, 40, 1.0),
+        ),
       ),
       body: Container(
         height: 250,

@@ -7,6 +7,9 @@ class Notifications extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Notifications'),
+        iconTheme: IconThemeData(
+          color: Color.fromRGBO(10, 17, 40, 1.0),
+        ),
       ),
     );
   }

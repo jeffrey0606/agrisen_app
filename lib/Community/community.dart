@@ -37,38 +37,39 @@ class Community extends StatelessWidget {
                       text: 'Questions Asked',
                     ),
                     Tab(
-                        child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: <Widget>[
-                        Text('Commented'),
-                        SizedBox(
-                          height: 20,
-                          child: Container(
-                            alignment: Alignment.center,
-                            padding: EdgeInsets.all(3),
-                            constraints: BoxConstraints(
-                              minWidth: 20,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(
-                                25,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: <Widget>[
+                          Text('Commented'),
+                          SizedBox(
+                            height: 20,
+                            child: Container(
+                              alignment: Alignment.center,
+                              padding: EdgeInsets.all(3),
+                              constraints: BoxConstraints(
+                                minWidth: 20,
                               ),
-                            ),
-                            child: FittedBox(
-                              child: Text(
-                                '13',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 9,
-                                  color: Colors.white,
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(
+                                  25,
+                                ),
+                              ),
+                              child: FittedBox(
+                                child: Text(
+                                  '13',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    ))
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),

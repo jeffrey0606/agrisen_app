@@ -14,11 +14,6 @@ class DiseaseDetectionPage extends StatefulWidget {
 
 class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
   File image;
-  bool _isDetecting = false;
-
-  bool _busy = false;
-
-  bool _hasRegisteredForPremium = true;
 
   void getImage(ImageSource imageSource) async {
     File _image = await ImagePicker.pickImage(source: imageSource);
