@@ -1,107 +1,169 @@
+import 'package:agrisen_app/timeAjuster.dart';
 import 'package:flutter/material.dart';
 
 class ACommentCard extends StatelessWidget {
   final String timelapse;
-  final List<int> repliedComments;
+  final List<dynamic> childComments;
   final bool viewReplies;
   final int currentIndex;
   final int index;
   final Function viewRepliesFunction;
+  final String parentComment;
+  final String commentorName;
+  final String parentProfileImage;
 
-  ACommentCard(
-      {this.timelapse,
-      this.repliedComments,
-      this.viewReplies = false,
-      this.currentIndex = 0,
-      this.index = 0,
-      this.viewRepliesFunction});
+  ACommentCard({
+    this.parentProfileImage,
+    this.timelapse,
+    this.childComments,
+    this.viewReplies = false,
+    this.currentIndex = 0,
+    this.index = 0,
+    this.viewRepliesFunction,
+    this.parentComment,
+    this.commentorName,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final string =
-        'What\'s the problem with this my tomato leaves. It has black spots on it sdsd dscssd bddwiuw eds  wfwefw wedw ?';
-    return AnimatedContainer(
-      height: viewReplies && currentIndex == index
-          ? repliedComments.length * 50.0
-          : string.length * 1.2,
-      duration: Duration(milliseconds: 600),
-      child: Column(
-        children: <Widget>[
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              CircleAvatar(
-                maxRadius: 25,
-                backgroundColor: Colors.blue,
+    return Column(
+      children: <Widget>[
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            CircleAvatar(
+              maxRadius: 25,
+              backgroundColor: Colors.blue,
+              backgroundImage: NetworkImage(this.parentProfileImage),
+            ),
+            SizedBox(
+              width: 10,
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  RichText(
+                    text: TextSpan(children: <InlineSpan>[
+                      TextSpan(
+                        text: commentorName,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      TextSpan(
+                        text: '   $timelapse',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      )
+                    ]),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Text(
+                    parentComment,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  if(childComments.isEmpty)SizedBox(
+                    height: 25,
+                  ),
+                  if(childComments.isNotEmpty)FlatButton.icon(
+                    icon: viewReplies && currentIndex == index
+                        ? Icon(
+                            Icons.keyboard_arrow_up,
+                            color: Colors.blue,
+                          )
+                        : Icon(
+                            Icons.keyboard_arrow_down,
+                            color: Colors.blue,
+                          ),
+                    label: Text(
+                      'view replies',
+                      style: TextStyle(color: Colors.blue),
+                    ),
+                    onPressed: () => viewRepliesFunction(),
+                  )
+                ],
               ),
-              SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
+            ),
+          ],
+        ),
+        if (viewReplies && currentIndex == index)
+          Container(
+            padding: EdgeInsets.only(
+              left: 30.0,
+              bottom: 20.0,
+            ),
+            child: Column(
+              children: childComments.map((comment) {
+                return Column(
                   children: <Widget>[
-                    RichText(
-                      text: TextSpan(children: <InlineSpan>[
-                        TextSpan(
-                          text: 'Jeffrey Kengne',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        CircleAvatar(
+                          maxRadius: 20,
+                          backgroundColor: Colors.blue,
+                          backgroundImage: NetworkImage(comment['profile_image'].toString().startsWith('https://') ? comment['profile_image'] : 'http://${comment['profile_image']}'),
+                        ),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: <Widget>[
+                              RichText(
+                                text: TextSpan(children: <InlineSpan>[
+                                  TextSpan(
+                                    text: comment['user_name'],
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '   ${TimeAjuster.ajust(DateTime.parse(comment['timestamp']))}',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  )
+                                ]),
+                              ),
+                              SizedBox(
+                                height: 10,
+                              ),
+                              Text(
+                                comment['comment'],
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        TextSpan(
-                          text: '   $timelapse',
-                          style: TextStyle(
-                            color: Colors.grey,
-                          ),
-                        )
-                      ]),
+                      ],
                     ),
                     SizedBox(
                       height: 10,
                     ),
-                    Text(
-                      string,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    FlatButton.icon(
-                      icon: viewReplies && currentIndex == index
-                          ? Icon(
-                              Icons.keyboard_arrow_up,
-                              color: Colors.blue,
-                            )
-                          : Icon(
-                              Icons.keyboard_arrow_down,
-                              color: Colors.blue,
-                            ),
-                      label: Text(
-                        'view replies',
-                        style: TextStyle(color: Colors.blue),
-                      ),
-                      onPressed: () => viewRepliesFunction(),
-                    )
                   ],
-                ),
-              ),
-            ],
+                );
+              }).toList(),
+            ),
           ),
-          if (viewReplies && currentIndex == index)
-            Expanded(
-              child: Column(
-                children: repliedComments.map((nums) {
-                  return Container(
-                    child: Text('replied comment # $nums '),
-                  );
-                }).toList(),
-              ),
-            )
-        ],
-      ),
+      ],
     );
   }
 }

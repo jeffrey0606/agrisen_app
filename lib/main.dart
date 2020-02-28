@@ -1,4 +1,9 @@
+import 'package:agrisen_app/Providers/loadArticles.dart';
+import 'package:agrisen_app/Providers/loadComments.dart';
+import 'package:agrisen_app/Providers/loadCrops.dart';
+import 'package:agrisen_app/Providers/loadHelps.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'PlantDiseaseDetection/diseaseDetectionPage.dart';
 import 'ProfilePage/notifications.dart';
@@ -25,36 +30,45 @@ class _MyAppState extends State<MyApp> {
       print('ture');
     });
   }*/
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData(
-        fontFamily: 'Comfortaa',
-        accentColor: Color.fromRGBO(237, 245, 252, 1.0),
-        //primaryColor: Color.fromRGBO(237, 245, 252, 1.0),
-        appBarTheme: AppBarTheme(
-          color: Color.fromRGBO(237, 245, 252, 1.0),
-          actionsIconTheme: IconThemeData(
-            color: Color.fromRGBO(10, 17, 40, 1.0),
-          ),
-          textTheme: TextTheme(
-            title: TextStyle(
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: LoadArticles()),
+        ChangeNotifierProvider.value(value: LoadCrops()),
+        ChangeNotifierProvider.value(value: LoadHelps()),
+        ChangeNotifierProvider.value(value: LoadComments()),
+      ],
+      child: MaterialApp(
+        theme: ThemeData(
+          fontFamily: 'Comfortaa',
+          accentColor: Color.fromRGBO(237, 245, 252, 1.0),
+          //primaryColor: Color.fromRGBO(237, 245, 252, 1.0),
+          appBarTheme: AppBarTheme(
+            color: Color.fromRGBO(237, 245, 252, 1.0),
+            actionsIconTheme: IconThemeData(
               color: Color.fromRGBO(10, 17, 40, 1.0),
-              fontSize: 22,
-              fontFamily: 'Comfortaa',
-              fontWeight: FontWeight.w800,
+            ),
+            textTheme: TextTheme(
+              title: TextStyle(
+                color: Color.fromRGBO(10, 17, 40, 1.0),
+                fontSize: 22,
+                fontFamily: 'Comfortaa',
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ),
+        home: MainAppContainer(),
+        routes: {
+          FullArticlePage.nameRoute: (ctx) => FullArticlePage(),
+          DiseaseDetectionPage.nameRoute : (ctx) => DiseaseDetectionPage(),
+          Notifications.nameRoute: (ctx) => Notifications(),
+          CommentingPage.routeName: (ctx) => CommentingPage(),
+          AskCommunityForm.routeName: (ctx) => AskCommunityForm(),
+        },
       ),
-      home: MainAppContainer(),
-      routes: {
-        FullArticlePage.nameRoute: (ctx) => FullArticlePage(),
-        DiseaseDetectionPage.nameRoute : (ctx) => DiseaseDetectionPage(),
-        Notifications.nameRoute: (ctx) => Notifications(),
-        CommentingPage.routeName: (ctx) => CommentingPage(),
-        AskCommunityForm.routeName: (ctx) => AskCommunityForm(),
-      },
     );
   }
 }

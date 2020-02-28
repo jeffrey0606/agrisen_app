@@ -1,10 +1,14 @@
+import 'dart:convert';
+
+import 'package:agrisen_app/Providers/facebook.dart';
 import 'package:agrisen_app/Providers/google.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'HomePage/myHomePage.dart';
 import 'PlantDiseaseDetection/diseaseDetectionPage.dart';
-import 'ProfilePage/profilePage.dart';
+import 'ProfilePage/hasNotLogin.dart';
 import 'Community/community.dart';
 import './Community/AskCommunity/askCommunityForm.dart';
 
@@ -23,35 +27,113 @@ class _MainAppContainerState extends State<MainAppContainer> {
   final List<Widget> screens = [
     MyHomePage(),
     Community(),
-    ProfilePage(),
+    HasNotLogin(),
   ];
 
-  void signout(GlobalKey<ScaffoldState> globalKey) async {
-    await Google.signout().catchError(
-      (onError) {
-        
-        globalKey.currentState.showSnackBar(
-          SnackBar(
-            content: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Icon(
-                  Icons.error_outline,
-                  color: Colors.red,
-                ),
-                SizedBox(
-                  width: 15,
-                ),
-                Text(onError),
-              ],
-            ),
+  snackBar(GlobalKey<ScaffoldState> globalKey, String message) {
+    globalKey.currentState.showSnackBar(
+      SnackBar(
+        content: FittedBox(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              Icon(
+                Icons.error_outline,
+                color: Colors.red,
+              ),
+              SizedBox(
+                width: 15,
+              ),
+              Text(message),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> signout(GlobalKey<ScaffoldState> globalKey) async {
+    final sharedPref = await SharedPreferences.getInstance();
+
+    if (sharedPref.containsKey('userInfos') == false) {
+      setState(() {
+        _currentTab = 2;
+      });
+      snackBar(
+          globalKey, 'You haven\'t login to the app yet. you can do it here!');
+    } else {
+      final userinfos = json.decode(sharedPref.getString('userInfos'));
+      
+      final subscriber = userinfos['subscriber'];
+      if (subscriber == 'google') {
+        await Google.signout().catchError((onError) {
+          snackBar(globalKey, onError);
+        }).then((_) async {
+          final res = await sharedPref.clear();
+
+          if (res) {
+            setState(() {
+              if (_currentTab == 2) {
+                _currentTab = 0;
+              } else {
+                _currentTab = 2;
+              }
+            });
+          }
+        });
+      } else if (subscriber == 'facebook') {
+        await Facebook.signout().catchError((onError) {
+          snackBar(globalKey, onError);
+        }).then((_) async {
+          final res = await sharedPref.clear();
+
+          if (res) {
+            setState(() {
+              if (_currentTab == 2) {
+                _currentTab = 0;
+              } else {
+                _currentTab = 2;
+              }
+            });
+          }
+        });
+      } else if (subscriber == 'emailAndpassword') {}
+    }
+  }
+
+  final _globalkey = GlobalKey<ScaffoldState>();
+
+  Future<void> alert(GlobalKey<ScaffoldState> globalKey) async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Text('Are you sure you want to sign out ?'),
+          contentPadding: EdgeInsets.all(15.0),
+          title: Text('sign out'),
+          titleTextStyle: TextStyle(
+            color: Colors.red,
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+          ),
+          actions: <Widget>[
+            FlatButton(
+              color: Colors.blue,
+              onPressed: () => Navigator.pop(context),
+              child: Text('No'),
+            ),
+            FlatButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await signout(globalKey);
+              },
+              child: Text('Yes'),
+            )
+          ],
         );
       },
     );
   }
-
-  final _globalkey = GlobalKey<ScaffoldState>();
 
   @override
   void dispose() {
@@ -76,7 +158,7 @@ class _MainAppContainerState extends State<MainAppContainer> {
                   onSelected: (items) {
                     switch (items) {
                       case MenuItems.logout:
-                        signout(_globalkey);
+                        alert(_globalkey);
                         break;
                       case MenuItems.settings:
                         break;
@@ -151,8 +233,18 @@ class _MainAppContainerState extends State<MainAppContainer> {
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: _currentTab == 1
           ? FloatingActionButton.extended(
-              onPressed: () =>
-                  Navigator.of(context).pushNamed(AskCommunityForm.routeName),
+              onPressed: () async{
+                final sharedPref = await SharedPreferences.getInstance();
+                if (sharedPref.containsKey('userInfos')) {
+                  final userInfos = json.decode(sharedPref.getString('userInfos'));
+                  Navigator.pushNamed(context, AskCommunityForm.routeName, arguments: userInfos);
+                } else {
+                  setState(() {
+                    _currentTab = 2;
+                  });
+                  snackBar(_globalkey, 'You haven\'t login to the app yet. you can do it here!');
+                }
+              },
               label: Text(
                 'Ask Help',
                 style: TextStyle(

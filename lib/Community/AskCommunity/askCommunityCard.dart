@@ -1,11 +1,51 @@
 import 'dart:io';
 
+import 'package:agrisen_app/Providers/loadComments.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class AskCommunityCard extends StatelessWidget {
-  final File file;
+class AskCommunityCard extends StatefulWidget {
+  final String cropName;
+  final String question;
+  final String userName;
+  final String profileImage;
+  final String timelapse;
   final Function onTap;
-  AskCommunityCard({this.file, this.onTap});
+  final String cropImage;
+  final String askHelpId;
+
+  AskCommunityCard({
+    this.onTap,
+    this.cropName,
+    this.question,
+    this.userName,
+    this.profileImage,
+    this.timelapse,
+    this.cropImage,
+    this.askHelpId, 
+  });
+
+  @override
+  _AskCommunityCardState createState() => _AskCommunityCardState();
+}
+
+class _AskCommunityCardState extends State<AskCommunityCard> {
+
+  bool once = true;
+  String commentsNumber = '0';
+
+
+
+  @override
+  void didChangeDependencies() async{
+    if(once){
+      await Provider.of<LoadComments>(context, listen: false).fechComments(widget.askHelpId);
+
+      commentsNumber = Provider.of<LoadComments>(context, listen: false).getCommentsNumber(widget.askHelpId).toString();
+    }
+    once = false;
+    super.didChangeDependencies();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +53,7 @@ class AskCommunityCard extends StatelessWidget {
       margin: EdgeInsets.only(top: 5.0, left: 0, right: 0, bottom: 5),
       child: Card(
         child: InkWell(
-          onTap: () => onTap(),
+          onTap: () => widget.onTap(),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(5),
             child: Container(
@@ -21,8 +61,8 @@ class AskCommunityCard extends StatelessWidget {
               child: Column(
                 children: <Widget>[
                   Expanded(
-                    child: Image.asset(
-                      'assets/backiee-117476-landscape.jpg',
+                    child: Image.network(
+                      'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/AskHelpImages/${this.widget.cropImage}',
                       fit: BoxFit.cover,
                       width: double.infinity,
                     ),
@@ -35,28 +75,33 @@ class AskCommunityCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: <Widget>[
                               CircleAvatar(
                                 maxRadius: 25,
                                 backgroundColor: Colors.blue,
+                                backgroundImage: NetworkImage(widget.profileImage),
                               ),
                               SizedBox(
                                 width: 15,
                               ),
                               Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 children: <Widget>[
                                   Text(
-                                    'Herve Niko',
+                                    this.widget.userName,
                                     textAlign: TextAlign.left,
                                     style: TextStyle(),
                                   ),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
                                   Text(
-                                    '5  d',
+                                    this.widget.timelapse,
                                     textAlign: TextAlign.left,
-                                    style: TextStyle(),
+                                    style: TextStyle(
+                                      fontStyle: FontStyle.italic,
+                                      color: Colors.blue,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -66,7 +111,7 @@ class AskCommunityCard extends StatelessWidget {
                             height: 10,
                           ),
                           Text(
-                            'What\'s the problem with this my tomato leaves. It has black spots on it?',
+                            this.widget.question.endsWith('?') ? this.widget.question : '${this.widget.question} ?',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -82,7 +127,7 @@ class AskCommunityCard extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
                                 Text(
-                                  'Tomato fruit',
+                                  this.widget.cropName,
                                   textAlign: TextAlign.start,
                                   style: TextStyle(
                                     color: Colors.grey,
@@ -107,7 +152,7 @@ class AskCommunityCard extends StatelessWidget {
                                         ),
                                         child: FittedBox(
                                           child: Text(
-                                            '13',
+                                            commentsNumber,
                                             textAlign: TextAlign.center,
                                             style: TextStyle(
                                               fontSize: 9,

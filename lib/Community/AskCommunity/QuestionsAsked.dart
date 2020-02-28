@@ -1,5 +1,10 @@
 import 'dart:io';
+import 'package:agrisen_app/Providers/loadComments.dart';
+import 'package:agrisen_app/Providers/loadHelps.dart';
+import 'package:agrisen_app/timeAjuster.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:provider/provider.dart';
 
 import 'askCommunityCard.dart';
 import '../CommentingPage/commentingPage.dart';
@@ -13,19 +18,36 @@ class QuestionsAsked extends StatefulWidget {
 }
 
 class _QuestionsAskedState extends State<QuestionsAsked> {
-  File file = File(
-      '/storage/emulated/0/Android/data/com.example.agrisensor_app/files/Pictures/image_picker7808531823496174987.PNG');
+
+  bool once = true;
+
+  @override
+  void didChangeDependencies() async{
+    if(once){
+      await Provider.of<LoadHelps>(context).fetchHelps();
+    }
+    once = false;
+    super.didChangeDependencies();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final loadhelps = Provider.of<LoadHelps>(context);
+    final helpsData = loadhelps.getHelpsData;
+    return Scrollbar(
       child: ListView.builder(
-        itemCount: 3,
+        itemCount: helpsData.length,
         itemBuilder: (buildContext, index) {
           return Container(
             child: AskCommunityCard(
-              file: file,
-              onTap: () => Navigator.pushNamed(context, CommentingPage.routeName),
+              cropName: helpsData[index]['crop_name'],
+              profileImage: helpsData[index]['profile_image'],
+              cropImage: helpsData[index]['crop_image'],
+              question: helpsData[index]['question'],
+              timelapse: TimeAjuster.ajust(DateTime.parse(helpsData[index]['timestamp'])),
+              userName: helpsData[index]['user_name'],
+              askHelpId:helpsData[index]['askHelp_id'],
+              onTap: () => Navigator.pushNamed(context, CommentingPage.routeName, arguments: helpsData[index]['askHelp_id']),
             ),
           );
         },

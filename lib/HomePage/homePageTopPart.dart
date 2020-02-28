@@ -1,7 +1,11 @@
-import 'package:agrisen_app/Providers/dummyData.dart';
+import 'dart:convert';
+
+import 'package:agrisen_app/Providers/loadCrops.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 
 class HomePageTopPart extends StatefulWidget {
   @override
@@ -9,13 +13,26 @@ class HomePageTopPart extends StatefulWidget {
 }
 
 class _HomePageTopPartState extends State<HomePageTopPart> {
-  final dummyData = DummyData().dummyData;
-  final availableCrops = DummyData().availableCrops;
+  bool once = true;
 
   int _currentPageIndex;
+
+  @override
+  void didChangeDependencies() async {
+    if (once) {
+      await Provider.of<LoadCrops>(context).fetchCrops();
+    }
+    once = false;
+    super.didChangeDependencies();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final cropsData = Provider.of<LoadCrops>(context);
+    final cropsList = cropsData.cropsData;
+    final carouselImages = Provider.of<LoadCrops>(context).carouselImages;
+
+    return cropsList == [] && carouselImages == [] ? CircularProgressIndicator() : Column(
       children: <Widget>[
         SizedBox(
           height: 10.0,
@@ -39,31 +56,30 @@ class _HomePageTopPartState extends State<HomePageTopPart> {
                 Container(
                   width: double.infinity,
                   child: CarouselSlider(
-                    initialPage: 0,
-                    enableInfiniteScroll: true,
-                    autoPlay: true,
-                    viewportFraction: 1.0,
-                    pauseAutoPlayOnTouch: Duration(seconds: 10),
-                    enlargeCenterPage: true,
-                    onPageChanged: (index) {
-                      setState(() {
-                        //_currentPageIndex = index;
-                      });
-                    },
-                    scrollDirection: Axis.horizontal,
-                    items: dummyData.map((item) {
-                      return Builder(
-                        builder: (context) {
-                          return Container();
-                          /*return Image.network(
-                            item.leadingImage,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                          );*/
-                        },
-                      );
-                    }).toList(),
-                  ),
+                          initialPage: 0,
+                          enableInfiniteScroll: true,
+                          autoPlay: true,
+                          viewportFraction: 1.0,
+                          pauseAutoPlayOnTouch: Duration(seconds: 10),
+                          enlargeCenterPage: true,
+                          onPageChanged: (index) {
+                            setState(() {
+                              _currentPageIndex = index;
+                            });
+                          },
+                          scrollDirection: Axis.horizontal,
+                          items: carouselImages.map((item) {
+                            return Builder(
+                              builder: (context) {
+                                return Image.network(
+                                  'http://192.168.43.150/Agrisen_app/carouselImages/$item',
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                );
+                              },
+                            );
+                          }).toList(),
+                        ),
                 ),
                 Positioned(
                   bottom: 0,
@@ -75,14 +91,14 @@ class _HomePageTopPartState extends State<HomePageTopPart> {
                     child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: dummyData.map((item) {
+                        children: carouselImages.map((item) {
                           return Container(
                             margin: EdgeInsets.symmetric(horizontal: 5.0),
                             child: CircleAvatar(
-                              backgroundColor:
-                                  dummyData.indexOf(item) == _currentPageIndex
-                                      ? Colors.pink
-                                      : Colors.white38,
+                              backgroundColor: carouselImages.indexOf(item) ==
+                                      _currentPageIndex
+                                  ? Colors.pink
+                                  : Colors.white38,
                               radius: 10.0,
                             ),
                           );
@@ -116,7 +132,7 @@ class _HomePageTopPartState extends State<HomePageTopPart> {
           height: 150,
           margin: EdgeInsets.symmetric(horizontal: 1.5),
           child: ListView.separated(
-            itemCount: availableCrops.length,
+            itemCount: cropsList.length,
             scrollDirection: Axis.horizontal,
             separatorBuilder: (context, index) {
               return VerticalDivider(
@@ -133,8 +149,8 @@ class _HomePageTopPartState extends State<HomePageTopPart> {
                     ),
                     elevation: 2,
                     child: CircleAvatar(
-                      child: SvgPicture.asset(
-                        availableCrops[index].icon,
+                      child: SvgPicture.network(
+                        'http://192.168.43.150/Agrisen_app/AdimFormsApis/CropImages/${cropsList[index]['image_name']}',
                         width: 60,
                       ),
                       backgroundColor: Color.fromRGBO(237, 245, 252, 1.0),
@@ -145,7 +161,7 @@ class _HomePageTopPartState extends State<HomePageTopPart> {
                     height: 5,
                   ),
                   Text(
-                    availableCrops[index].name,
+                    '${cropsList[index]['crop_name']}',
                     softWrap: true,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,

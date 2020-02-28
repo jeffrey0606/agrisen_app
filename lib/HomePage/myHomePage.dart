@@ -1,4 +1,5 @@
-import 'package:agrisen_app/Providers/dummyData.dart';
+import 'package:agrisen_app/Providers/loadArticles.dart';
+import 'package:provider/provider.dart';
 import '../widgets/Articles/ArticleCard.dart';
 import '../widgets/Articles/fullArticlePage.dart';
 import 'package:flutter/material.dart';
@@ -11,10 +12,22 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  bool _isScrolling = false;
+  bool _isScrolling = false, once = true;
+
+  @override
+  void didChangeDependencies() async{
+    if(once){
+      await Provider.of<LoadArticles>(context).fetchArticles();
+    }
+    once = false;
+    super.didChangeDependencies();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final dummyData = DummyData().dummyData;
+    final loadArticles = Provider.of<LoadArticles>(context);
+    final articlesData = loadArticles.getArticlesData;
+
     return Container(
       child:
           /*NotificationListener<ScrollNotification>(
@@ -30,8 +43,8 @@ class _MyHomePageState extends State<MyHomePage> {
           }
         },
         child: */
-          ListView.builder(
-        itemCount: dummyData.length,
+        ListView.builder(
+        itemCount: articlesData.length,
         itemBuilder: ((context, index) {
           return Column(
             children: <Widget>[
@@ -40,14 +53,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 height: 10.0,
               ),
               ArticleCard(
-                leadingImage: dummyData[index].leadingImage,
-                title: dummyData[index].title,
-                subTitle: dummyData[index].subTitle,
+                leadingImage: articlesData[index]['cover_image'],
+                title: articlesData[index]['crop_name'],
+                subTitle: articlesData[index]['description'],
                 onTap: () => Navigator.of(context).pushNamed(
                   FullArticlePage.nameRoute,
-                  arguments: dummyData[index].articleId,
+                  arguments: articlesData[index]['article_id'],
                 ),
-                articleId: dummyData[index].articleId,
+                articleId: articlesData[index]['article_id'],
               ),
               SizedBox(
                 height: 5.0,

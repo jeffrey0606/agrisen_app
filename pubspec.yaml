@@ -35,6 +35,14 @@ dependencies:
   flutter_image_compress: ^0.6.3
   keyboard_visibility: ^0.5.6
   google_sign_in: ^4.1.1
+  flutter_facebook_login: ^3.0.0
+  flutter_html: ^0.11.1
+  provider: ^4.0.2
+  http: ^0.12.0+4
+  url_launcher: ^5.4.1
+  flutter_tts: ^0.8.6
+  path_provider: ^1.6.0
+
 
 dev_dependencies:
   flutter_test:
@@ -59,20 +67,6 @@ flutter:
     - assets/plant_disease_model1.tflite
     - assets/plant_labels.txt
     - assets/runTestIcon.png
-    - assets/SVGPics/apple.svg
-    - assets/SVGPics/blueberry.svg
-    - assets/SVGPics/cherry.svg
-    - assets/SVGPics/corn.svg
-    - assets/SVGPics/grapes.svg
-    - assets/SVGPics/orange.svg
-    - assets/SVGPics/peppersbell.svg
-    - assets/SVGPics/potato.svg
-    - assets/SVGPics/raspberry.svg
-    - assets/SVGPics/soybean.svg
-    - assets/SVGPics/squashpowdery.svg
-    - assets/SVGPics/strawberry.svg
-    - assets/SVGPics/tomato.svg
-    - assets/SVGPics/peach.svg
     - assets/SVGPics/home.svg
     - assets/SVGPics/profile.svg
     - assets/SVGPics/facebook.svg
