@@ -22,7 +22,7 @@ class AskCommunityCard extends StatefulWidget {
     this.profileImage,
     this.timelapse,
     this.cropImage,
-    this.askHelpId, 
+    this.askHelpId,
   });
 
   @override
@@ -30,18 +30,22 @@ class AskCommunityCard extends StatefulWidget {
 }
 
 class _AskCommunityCardState extends State<AskCommunityCard> {
-
   bool once = true;
   String commentsNumber = '0';
 
-
-
   @override
-  void didChangeDependencies() async{
-    if(once){
-      await Provider.of<LoadComments>(context, listen: false).fechComments(widget.askHelpId);
+  void didChangeDependencies() async {
+    if (once) {
+      await Provider.of<LoadComments>(context, listen: false)
+          .fechComments(widget.askHelpId);
 
-      commentsNumber = Provider.of<LoadComments>(context, listen: false).getCommentsNumber(widget.askHelpId).toString();
+      final temp = Provider.of<LoadComments>(context, listen: false)
+          .getCommentsNumber(widget.askHelpId)
+          .toString();
+
+      setState(() {
+        commentsNumber = temp;
+      });
     }
     once = false;
     super.didChangeDependencies();
@@ -79,13 +83,15 @@ class _AskCommunityCardState extends State<AskCommunityCard> {
                               CircleAvatar(
                                 maxRadius: 25,
                                 backgroundColor: Colors.blue,
-                                backgroundImage: NetworkImage(widget.profileImage),
+                                backgroundImage:
+                                    NetworkImage(widget.profileImage),
                               ),
                               SizedBox(
                                 width: 15,
                               ),
                               Column(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
                                 children: <Widget>[
                                   Text(
                                     this.widget.userName,
@@ -111,7 +117,9 @@ class _AskCommunityCardState extends State<AskCommunityCard> {
                             height: 10,
                           ),
                           Text(
-                            this.widget.question.endsWith('?') ? this.widget.question : '${this.widget.question} ?',
+                            this.widget.question.endsWith('?')
+                                ? this.widget.question
+                                : '${this.widget.question} ?',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,

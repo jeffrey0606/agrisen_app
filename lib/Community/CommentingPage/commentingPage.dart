@@ -3,12 +3,14 @@ import 'dart:convert';
 import 'package:agrisen_app/Providers/loadComments.dart';
 import 'package:agrisen_app/timeAjuster.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:keyboard_visibility/keyboard_visibility.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Providers/loadHelps.dart';
 import 'aCommentCard.dart';
+import 'package:http/http.dart' as http;
 
 class CommentingPage extends StatefulWidget {
   static const routeName = 'CommentingPage';
@@ -28,6 +30,8 @@ class _CommentingPageState extends State<CommentingPage> {
   void initState() {
     super.initState();
 
+    commentText.addListener(() {});
+
     KeyboardVisibilityNotification().addNewListener(onChange: (visible) {
       setState(() async {
         if (visible) {
@@ -45,6 +49,10 @@ class _CommentingPageState extends State<CommentingPage> {
     });
   }
 
+  var tagName = '';
+  List<String> tags = [];
+  String _parentCommentId = null;
+
   @override
   void didChangeDependencies() async {
     super.didChangeDependencies();
@@ -56,22 +64,25 @@ class _CommentingPageState extends State<CommentingPage> {
 
       final sharedPref = await SharedPreferences.getInstance();
 
-      if(sharedPref.containsKey('userInfos')){
+      if (sharedPref.containsKey('userInfos')) {
         final userinfos = json.decode(sharedPref.getString('userInfos'));
         setState(() {
           api_key = userinfos['api-key'];
           _isLoggin = true;
         });
-      }else{
-        snakebar('You haven\'t login to the app yet. you can do it at profile page!');
+      } else {
+        snakebar(
+            'You haven\'t login to the app yet. you can do it at profile page!');
       }
     }
     once = false;
+  
   }
 
   snakebar(String message) {
-    Scaffold.of(context).showSnackBar(
+    _globalKey.currentState.showSnackBar(
       SnackBar(
+        duration: Duration(seconds: 3),
         content: FittedBox(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -127,7 +138,54 @@ class _CommentingPageState extends State<CommentingPage> {
     super.dispose();
     _commentFocusNode.dispose();
     commentText.dispose();
+    if(mounted == false){
+      Provider.of<LoadComments>(context, listen: false).emptyComments();
+      tags = [];
+    }
   }
+
+  Future<void> sendComment(String askHelpId, List<String> tags, String parentCommentId) async{
+    try {
+      final url = 'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/';
+
+      final response = await http.post('$url'+'comment.php',body: {
+        'commentData': json.encode({
+          'askHelp_id': askHelpId,
+          'parent_comment_id': parentCommentId,
+          'comment': commentText.text,
+        })
+      }, headers: {
+        'api_key': api_key
+      });
+
+      if(response != null){
+        final result = json.decode(response.body);
+
+        if(result['status'] == 200){
+          final response = await http.post('$url'+'tag.php',body: {
+            'tags': json.encode(tags),
+            'comment_id': result['comment_id'],
+          });
+
+          if(response != null){
+            final result = json.decode(response.body);
+
+            if(result['status'] == 200){
+              setState(() {
+                commentText.text = '';
+              });
+              await Provider.of<LoadComments>(context, listen: false)
+              .fechComments(askHelpId);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      print('errs: $e');
+    }
+  }
+
+  final _globalKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
@@ -138,9 +196,8 @@ class _CommentingPageState extends State<CommentingPage> {
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
     final commentors = comment.getComentors(api_key);
 
-    print(commentors);
-
     return Scaffold(
+      key: _globalKey,
       body: CustomScrollView(
         slivers: <Widget>[
           SliverAppBar(
@@ -214,6 +271,7 @@ class _CommentingPageState extends State<CommentingPage> {
                                   FocusScope.of(context)
                                       .requestFocus(_commentFocusNode);
                                   setState(() {
+                                    _parentCommentId = parentComments[index]['comment_id'];
                                     _isReplying = !_isReplying;
                                   });
                                   return false;
@@ -282,128 +340,101 @@ class _CommentingPageState extends State<CommentingPage> {
                 width: 5,
               ),
               Expanded(
-                child: AnimatedContainer(
-                  duration: Duration(milliseconds: 600),
-                  //height: _isReplying ? 170 : 53,
+                child: Card(
+                  elevation: 5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
                   child: Column(
                     children: <Widget>[
                       if (tagging)
-                        Card(
-                          elevation: 5,
-                          child: Stack(
-                            children: <Widget>[
-                              Container(
-                                height: 150,
-                                margin: EdgeInsets.all(8.0),
-                                padding: EdgeInsets.all(5.0),
-                                color: Color.fromRGBO(237, 245, 252, 1.0),
-                                child: ListView.separated(
-                                  separatorBuilder: (context, index) => Divider(),
-                                  itemCount: commentors.length,
-                                  itemBuilder: (contex, index) {
-                                    return ListTile(
+                        Container(
+                          height: commentors.length > 4 ? 150 : null,
+                          decoration: BoxDecoration(
+                            color: Color.fromRGBO(237, 245, 252, 1.0),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(20.0),
+                              topRight: Radius.circular(20.0),
+                            ),
+                          ),
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children: commentors.map((comment) {
+                                final index = commentors.indexOf(comment);
+                                return Column(
+                                  children: <Widget>[
+                                    if(index != 0)Divider(
+                                      indent: MediaQuery.of(context).size.width * 0.18,
+                                    ),
+                                    ListTile(
                                       leading: CircleAvatar(
                                         backgroundColor: Colors.blue,
                                         maxRadius: 15,
                                         backgroundImage: NetworkImage(
-                                          commentors[index]['profile_image']
+                                          comment['profile_image']
                                                   .toString()
                                                   .startsWith('https://')
-                                              ? commentors[index]
-                                                  ['profile_image']
-                                              : 'http://${commentors[index]['profile_image']}',
+                                              ? comment['profile_image']
+                                              : 'http://${comment['profile_image']}',
                                         ),
                                       ),
-                                      title: Text(commentors[index]['user_name']),
-                                      onTap: () => null,
-                                    );
-                                  },
-                                ),
-                              ),
-                              Positioned(
-                                top: 3,
-                                right: 5,
-                                child: InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      _isReplying = false;
-                                    });
-                                  },
-                                  child: Container(
-                                    width: 18,
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: <Color>[
-                                          Colors.blue,
-                                          Colors.red
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(50),
+                                      title: Text(comment['user_name']),
+                                      onTap: () {
+                                        setState(() {
+                                          tagging = false;
+                                          tagName = comment['user_name'];
+                                          commentText.text =
+                                              commentText.text + tagName + ' ';
+                                          commentText.selection =
+                                              TextSelection.fromPosition(
+                                            TextPosition(
+                                              offset: commentText.text.length,
+                                            ),
+                                          );
+
+                                          if(tagName.isNotEmpty){
+                                            tags.add(comment['commentor_id']);
+                                          }
+                                        });
+                                      },
                                     ),
-                                    child: Text(
-                                      'x',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w900,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              )
-                            ],
+                                  ],
+                                );
+                              }).toList(),
+                            ),
                           ),
                         ),
-                      SizedBox(
-                        width: 5,
-                      ),
-                      Card(
-                        elevation: 5,
-                        child: Scrollbar(
-                          child: TextField(
-                            controller: commentText,
-                            onChanged: (text) {
-                              if(text.endsWith('@')){
-                                setState(() {
-                                  tagging = true;
-                                  commentText.text = commentText.text + 'jeffrey';
-                                  
-                                });
-                              }else{
-                                setState(() {
-                                  tagging = false;
-                                });
-                              }
-                              /*if (text.startsWith(new RegExp(r'^@')) && text.startsWith(new RegExp(r'[\w]'))) {
-                                setState(() {
-                                  tagging = true;
-                                  commentText.text = commentText.text + 'jeffrey';
-                                });
-                              } else {
-                                setState(() {
-                                  commentText.text = commentText.text;
-                                  tagging = false;
-                                });
-                              }*/
-                            },
-                            focusNode: _commentFocusNode,
-                            toolbarOptions: ToolbarOptions(
-                              copy: true,
-                              cut: true,
-                              paste: true,
-                              selectAll: true,
-                            ),
-
-                            keyboardType: TextInputType.emailAddress,
-                            minLines: 1,
-                            maxLines: 5,
-                            style: TextStyle(fontSize: 22),
-                            decoration: InputDecoration(
-                              hintStyle: TextStyle(fontSize: 22),
-                              contentPadding: EdgeInsets.all(8.0),
-                              border: OutlineInputBorder(),
-                              hintText: 'Comment...',
-                            ),
+                      Scrollbar(
+                        child: TextField(
+                          controller: commentText,
+                          onChanged: (text) {
+                            if (text.startsWith('@') && text.endsWith('@')) {
+                              setState(() {
+                                tagging = true;
+                              });
+                            } else {
+                              setState(() {
+                                tagName = '';
+                                tagging = false;
+                              });
+                            }
+                          },
+                          focusNode: _commentFocusNode,
+                          toolbarOptions: ToolbarOptions(
+                            copy: true,
+                            cut: true,
+                            paste: true,
+                            selectAll: true,
+                          ),
+                          keyboardType: TextInputType.emailAddress,
+                          minLines: 1,
+                          maxLines: 7,
+                          style: TextStyle(fontSize: 18),
+                          decoration: InputDecoration(
+                            hintStyle: TextStyle(fontSize: 18),
+                            contentPadding: EdgeInsets.all(8.0),
+                            border: InputBorder.none,
+                            hintText: 'Comment...',
                           ),
                         ),
                       ),

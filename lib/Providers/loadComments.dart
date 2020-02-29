@@ -33,6 +33,12 @@ class LoadComments extends ChangeNotifier{
     }
   }
 
+  void emptyComments(){
+    _comments = [];
+    
+    notifyListeners();
+  }
+
   List<dynamic> getParentComnents() {
     return _comments.where((test) => test['parent_comment_id'] == null).toList();
   }
