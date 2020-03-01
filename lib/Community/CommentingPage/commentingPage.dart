@@ -30,8 +30,6 @@ class _CommentingPageState extends State<CommentingPage> {
   void initState() {
     super.initState();
 
-    commentText.addListener(() {});
-
     KeyboardVisibilityNotification().addNewListener(onChange: (visible) {
       setState(() async {
         if (visible) {
@@ -76,7 +74,6 @@ class _CommentingPageState extends State<CommentingPage> {
       }
     }
     once = false;
-  
   }
 
   snakebar(String message) {
@@ -138,17 +135,18 @@ class _CommentingPageState extends State<CommentingPage> {
     super.dispose();
     _commentFocusNode.dispose();
     commentText.dispose();
-    if(mounted == false){
+    if (mounted == false) {
       Provider.of<LoadComments>(context, listen: false).emptyComments();
       tags = [];
     }
   }
 
-  Future<void> sendComment(String askHelpId, List<String> tags, String parentCommentId) async{
+  Future<void> sendComment(
+      String askHelpId, List<String> tags, String parentCommentId) async {
     try {
       final url = 'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/';
 
-      final response = await http.post('$url'+'comment.php',body: {
+      final response = await http.post('$url' + 'comment.php', body: {
         'commentData': json.encode({
           'askHelp_id': askHelpId,
           'parent_comment_id': parentCommentId,
@@ -158,25 +156,35 @@ class _CommentingPageState extends State<CommentingPage> {
         'api_key': api_key
       });
 
-      if(response != null){
+      if (response != null) {
         final result = json.decode(response.body);
 
-        if(result['status'] == 200){
-          final response = await http.post('$url'+'tag.php',body: {
-            'tags': json.encode(tags),
-            'comment_id': result['comment_id'],
-          });
+        if (result['status'] == 200) {
+          if (tags.isNotEmpty) {
+            final response = await http.post('$url' + 'tag.php', body: {
+              'tags': json.encode(tags),
+              'comment_id': result['comment_id'].toString(),
+            }, headers: {
+              'api_key': api_key
+            });
 
-          if(response != null){
-            final result = json.decode(response.body);
+            if (response != null) {
+              final result = json.decode(response.body);
 
-            if(result['status'] == 200){
-              setState(() {
-                commentText.text = '';
-              });
-              await Provider.of<LoadComments>(context, listen: false)
-              .fechComments(askHelpId);
+              if (result['status'] == 200) {
+                setState(() {
+                  commentText.text = '';
+                });
+                await Provider.of<LoadComments>(context, listen: false)
+                    .fechComments(askHelpId);
+              }
             }
+          } else {
+            setState(() {
+              commentText.text = '';
+            });
+            await Provider.of<LoadComments>(context, listen: false)
+                .fechComments(askHelpId);
           }
         }
       }
@@ -241,9 +249,9 @@ class _CommentingPageState extends State<CommentingPage> {
             ),
           ),
           SliverPadding(
-            padding: const EdgeInsets.only(
+            padding: EdgeInsets.only(
               top: 5.0,
-              bottom: 5.0,
+              bottom: 70.0,
               right: 5.0,
               left: 5.0,
             ),
@@ -253,7 +261,9 @@ class _CommentingPageState extends State<CommentingPage> {
                       child: Text(
                         'No comment available yet',
                         style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 22),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 22,
+                        ),
                       ),
                     ),
                   )
@@ -266,16 +276,19 @@ class _CommentingPageState extends State<CommentingPage> {
                             children: <Widget>[
                               Dismissible(
                                 key: UniqueKey(),
-                                direction: DismissDirection.endToStart,
                                 confirmDismiss: (_) async {
                                   FocusScope.of(context)
                                       .requestFocus(_commentFocusNode);
                                   setState(() {
-                                    _parentCommentId = parentComments[index]['comment_id'];
+                                    _parentCommentId =
+                                        parentComments[index]['comment_id'];
                                     _isReplying = !_isReplying;
                                   });
+                                  print(_parentCommentId);
                                   return false;
                                 },
+                                direction: DismissDirection.endToStart,
+                                onDismissed: (_) {},
                                 child: ACommentCard(
                                   parentProfileImage: parentComments[index]
                                               ['profile_image']
@@ -315,10 +328,10 @@ class _CommentingPageState extends State<CommentingPage> {
                                   ),
                                 ),
                               ),
-                              if (index == 9)
-                                SizedBox(
-                                  height: 60,
-                                )
+                              if(index == parentComments.length)
+                              SizedBox(
+                                height: keyboardHeight + 100,
+                              )
                             ],
                           ),
                         );
@@ -363,9 +376,12 @@ class _CommentingPageState extends State<CommentingPage> {
                                 final index = commentors.indexOf(comment);
                                 return Column(
                                   children: <Widget>[
-                                    if(index != 0)Divider(
-                                      indent: MediaQuery.of(context).size.width * 0.18,
-                                    ),
+                                    if (index != 0)
+                                      Divider(
+                                        indent:
+                                            MediaQuery.of(context).size.width *
+                                                0.18,
+                                      ),
                                     ListTile(
                                       leading: CircleAvatar(
                                         backgroundColor: Colors.blue,
@@ -392,7 +408,7 @@ class _CommentingPageState extends State<CommentingPage> {
                                             ),
                                           );
 
-                                          if(tagName.isNotEmpty){
+                                          if (tagName.isNotEmpty) {
                                             tags.add(comment['commentor_id']);
                                           }
                                         });
@@ -401,6 +417,74 @@ class _CommentingPageState extends State<CommentingPage> {
                                   ],
                                 );
                               }).toList(),
+                            ),
+                          ),
+                        ),
+                      if (_isReplying)
+                        Dismissible(
+                          direction: DismissDirection.horizontal,
+                          key: UniqueKey(),
+                          confirmDismiss: (_) async {
+                            return true;
+                          },
+                          onDismissed: (_) {
+                            _parentCommentId = null;
+                            _isReplying = false;
+                            print(_parentCommentId);
+                          },
+                          child: ClipRRect(
+                            borderRadius: tagging
+                                ? BorderRadius.zero
+                                : BorderRadius.only(
+                                    topLeft: Radius.circular(20.0),
+                                    topRight: Radius.circular(20.0),
+                                  ),
+                            child: Container(
+                              width: double.infinity,
+                              height: 70,
+                              decoration: tagging
+                                  ? BoxDecoration()
+                                  : BoxDecoration(
+                                      color: Color.fromRGBO(237, 245, 252, 1.0),
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(20.0),
+                                        topRight: Radius.circular(20.0),
+                                      ),
+                                    ),
+                              child: Stack(
+                                children: <Widget>[
+                                  Positioned(
+                                    bottom: 5,
+                                    left: 5,
+                                    child: Text(
+                                      'Replying...',
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 0,
+                                    right: 5,
+                                    bottom: 0,
+                                    child: InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          _parentCommentId = null;
+                                          _isReplying = false;
+                                        });
+                                        print(_parentCommentId);
+                                      },
+                                      child: CircleAvatar(
+                                        backgroundColor: Colors.blue,
+                                        child: Text('x'),
+                                        maxRadius: 20,
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -446,7 +530,13 @@ class _CommentingPageState extends State<CommentingPage> {
                 width: 5,
               ),
               FloatingActionButton(
-                onPressed: _isLoggin ? () => null : null,
+                onPressed: _isLoggin
+                    ? () async {
+                        if (commentText.text.isNotEmpty) {
+                          await sendComment(askHelpId, tags, _parentCommentId);
+                        }
+                      }
+                    : null,
                 elevation: 5,
                 child: Icon(
                   Icons.send,
