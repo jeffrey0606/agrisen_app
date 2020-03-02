@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:agrisen_app/Providers/loadCommentedHelps.dart';
 import 'package:agrisen_app/Providers/loadComments.dart';
 import 'package:agrisen_app/timeAjuster.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +21,7 @@ class CommentingPage extends StatefulWidget {
 }
 
 class _CommentingPageState extends State<CommentingPage> {
-  bool _isTextFieldTaped = false, _isReplying = false, once = true;
+  bool _isReplying = false, once = true;
   bool tagging = false, _isLoggin = false;
   String api_key = '';
 
@@ -31,19 +32,11 @@ class _CommentingPageState extends State<CommentingPage> {
     super.initState();
 
     KeyboardVisibilityNotification().addNewListener(onChange: (visible) {
-      setState(() async {
-        if (visible) {
-          _isTextFieldTaped = true;
-          FocusScope.of(context).requestFocus(_commentFocusNode);
-        } else {
-          final askHelpId = ModalRoute.of(context).settings.arguments as String;
-
-          await Provider.of<LoadComments>(context, listen: false)
-              .fechComments(askHelpId);
-          _isTextFieldTaped = false;
-          _commentFocusNode.unfocus();
-        }
-      });
+      if (visible) {
+        FocusScope.of(context).requestFocus(_commentFocusNode);
+      } else {
+        _commentFocusNode.unfocus();
+      }
     });
   }
 
@@ -56,9 +49,8 @@ class _CommentingPageState extends State<CommentingPage> {
     super.didChangeDependencies();
 
     if (once) {
-      final askHelpId = ModalRoute.of(context).settings.arguments as String;
 
-      await Provider.of<LoadComments>(context).fechComments(askHelpId);
+      await Provider.of<LoadComments>(context).fechComments();
 
       final sharedPref = await SharedPreferences.getInstance();
 
@@ -69,6 +61,7 @@ class _CommentingPageState extends State<CommentingPage> {
           _isLoggin = true;
         });
       } else {
+        
         snakebar(
             'You haven\'t login to the app yet. you can do it at profile page!');
       }
@@ -131,12 +124,14 @@ class _CommentingPageState extends State<CommentingPage> {
   }
 
   @override
-  void dispose() {
+  void dispose() async{
     super.dispose();
     _commentFocusNode.dispose();
     commentText.dispose();
     if (mounted == false) {
-      Provider.of<LoadComments>(context, listen: false).emptyComments();
+      //Provider.of<LoadComments>(context, listen: false).emptyComments();
+      await Provider.of<LoadCommentedHelps>(context, listen: false)
+            .fechCommentedHelps(api_key);
       tags = [];
     }
   }
@@ -176,7 +171,9 @@ class _CommentingPageState extends State<CommentingPage> {
                   commentText.text = '';
                 });
                 await Provider.of<LoadComments>(context, listen: false)
-                    .fechComments(askHelpId);
+                    .fechComments();
+                await Provider.of<LoadCommentedHelps>(context, listen: false)
+            .fechCommentedHelps(api_key);    
               }
             }
           } else {
@@ -184,7 +181,9 @@ class _CommentingPageState extends State<CommentingPage> {
               commentText.text = '';
             });
             await Provider.of<LoadComments>(context, listen: false)
-                .fechComments(askHelpId);
+                .fechComments();
+            await Provider.of<LoadCommentedHelps>(context, listen: false)
+            .fechCommentedHelps(api_key);   
           }
         }
       }
@@ -198,11 +197,13 @@ class _CommentingPageState extends State<CommentingPage> {
   @override
   Widget build(BuildContext context) {
     final comment = Provider.of<LoadComments>(context);
-    final parentComments = comment.getParentComnents();
     final askHelpId = ModalRoute.of(context).settings.arguments as String;
+    final parentComments = comment.getParentComnents(askHelpId);
     final help = Provider.of<LoadHelps>(context).getHelp(askHelpId);
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
     final commentors = comment.getComentors(api_key);
+
+    print(askHelpId);
 
     return Scaffold(
       key: _globalKey,
@@ -301,9 +302,9 @@ class _CommentingPageState extends State<CommentingPage> {
                                   commentorName: parentComments[index]
                                       ['user_name'],
                                   timelapse: TimeAjuster.ajust(DateTime.parse(
-                                      parentComments[index]['timestamp'])),
+                                      parentComments[index]['comment_timestamp'])),
                                   childComments: comment.getChildrenComments(
-                                      parentComments[index]['comment_id']),
+                                      parentComments[index]['comment_id'], askHelpId),
                                   currentIndex: _currentIndex,
                                   index: index,
                                   viewReplies: _showMore,
@@ -328,10 +329,10 @@ class _CommentingPageState extends State<CommentingPage> {
                                   ),
                                 ),
                               ),
-                              if(index == parentComments.length)
-                              SizedBox(
-                                height: keyboardHeight + 100,
-                              )
+                              if (index == parentComments.length)
+                                SizedBox(
+                                  height: keyboardHeight + 100,
+                                )
                             ],
                           ),
                         );

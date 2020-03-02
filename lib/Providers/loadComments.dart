@@ -11,11 +11,10 @@ class LoadComments extends ChangeNotifier{
     return [..._comments];
   }
 
-  Future<void> fechComments(String askHelpId) async{
-    _comments = [];
+  Future<void> fechComments() async{
     try {
       final url =
-          'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/fetchComments.php?askHelp_id=$askHelpId';
+          'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/fetchComments.php';
       final response = await http.get(url);
 
       if (response != null) {
@@ -39,8 +38,8 @@ class LoadComments extends ChangeNotifier{
     notifyListeners();
   }
 
-  List<dynamic> getParentComnents() {
-    return _comments.where((test) => test['parent_comment_id'] == null).toList();
+  List<dynamic> getParentComnents(String askHelpId) {
+    return _comments.where((test) => test['parent_comment_id'] == null && test['askHelp_id'] == askHelpId).toList();
   }
 
   int getCommentsNumber(String askHelpId){
@@ -49,8 +48,8 @@ class LoadComments extends ChangeNotifier{
     return comments.length;
   }
 
-  List<dynamic> getChildrenComments(String parentCommentId) {
-    return _comments.where((test) => test['parent_comment_id'] == parentCommentId).toList();
+  List<dynamic> getChildrenComments(String parentCommentId, String askHelpId) {
+    return _comments.where((test) => test['parent_comment_id'] == parentCommentId && test['askHelp_id'] == askHelpId).toList();
   }
 
   List<dynamic> getComentors(String apiKey){

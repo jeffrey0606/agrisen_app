@@ -2,8 +2,10 @@ import 'dart:convert';
 
 import 'package:agrisen_app/Providers/facebook.dart';
 import 'package:agrisen_app/Providers/google.dart';
+import 'package:agrisen_app/Providers/loadHelps.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'HomePage/myHomePage.dart';
@@ -11,6 +13,7 @@ import 'PlantDiseaseDetection/diseaseDetectionPage.dart';
 import 'ProfilePage/hasNotLogin.dart';
 import 'Community/community.dart';
 import './Community/AskCommunity/askCommunityForm.dart';
+import 'Providers/loadComments.dart';
 
 class MainAppContainer extends StatefulWidget {
   @override
@@ -24,11 +27,22 @@ enum MenuItems {
 
 class _MainAppContainerState extends State<MainAppContainer> {
   int _currentTab = 0;
+  bool once = true;
   final List<Widget> screens = [
     MyHomePage(),
     Community(),
     HasNotLogin(),
   ];
+
+  @override
+  void didChangeDependencies() async{
+    if(once){
+      await Provider.of<LoadHelps>(context).fetchHelps();
+      await Provider.of<LoadComments>(context, listen: false).fechComments();
+    }
+    once = false;
+    super.didChangeDependencies();
+  }
 
   snackBar(GlobalKey<ScaffoldState> globalKey, String message) {
     globalKey.currentState.showSnackBar(

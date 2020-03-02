@@ -1,4 +1,5 @@
 import 'package:agrisen_app/Providers/loadArticles.dart';
+import 'package:agrisen_app/Providers/loadCommentedHelps.dart';
 import 'package:agrisen_app/Providers/loadComments.dart';
 import 'package:agrisen_app/Providers/loadCrops.dart';
 import 'package:agrisen_app/Providers/loadHelps.dart';
@@ -39,6 +40,7 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider.value(value: LoadCrops()),
         ChangeNotifierProvider.value(value: LoadHelps()),
         ChangeNotifierProvider.value(value: LoadComments()),
+        ChangeNotifierProvider.value(value: LoadCommentedHelps()),
       ],
       child: MaterialApp(
         theme: ThemeData(

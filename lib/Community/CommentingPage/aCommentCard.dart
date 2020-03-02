@@ -132,7 +132,7 @@ class ACommentCard extends StatelessWidget {
                                     ),
                                   ),
                                   TextSpan(
-                                    text: '   ${TimeAjuster.ajust(DateTime.parse(comment['timestamp']))}',
+                                    text: '   ${TimeAjuster.ajust(DateTime.parse(comment['comment_timestamp']))}',
                                     style: TextStyle(
                                       color: Colors.grey,
                                       fontStyle: FontStyle.italic,

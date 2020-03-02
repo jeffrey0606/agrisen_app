@@ -37,7 +37,7 @@ class _AskCommunityCardState extends State<AskCommunityCard> {
   void didChangeDependencies() async {
     if (once) {
       await Provider.of<LoadComments>(context, listen: false)
-          .fechComments(widget.askHelpId);
+          .fechComments();
 
       final temp = Provider.of<LoadComments>(context, listen: false)
           .getCommentsNumber(widget.askHelpId)

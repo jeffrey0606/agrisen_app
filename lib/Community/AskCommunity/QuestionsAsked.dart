@@ -25,6 +25,7 @@ class _QuestionsAskedState extends State<QuestionsAsked> {
   void didChangeDependencies() async{
     if(once){
       await Provider.of<LoadHelps>(context).fetchHelps();
+      await Provider.of<LoadComments>(context, listen: false).fechComments();
     }
     once = false;
     super.didChangeDependencies();
