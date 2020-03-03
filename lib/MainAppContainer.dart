@@ -35,8 +35,8 @@ class _MainAppContainerState extends State<MainAppContainer> {
   ];
 
   @override
-  void didChangeDependencies() async{
-    if(once){
+  void didChangeDependencies() async {
+    if (once) {
       await Provider.of<LoadHelps>(context).fetchHelps();
       await Provider.of<LoadComments>(context, listen: false).fechComments();
     }
@@ -77,7 +77,7 @@ class _MainAppContainerState extends State<MainAppContainer> {
           globalKey, 'You haven\'t login to the app yet. you can do it here!');
     } else {
       final userinfos = json.decode(sharedPref.getString('userInfos'));
-      
+
       final subscriber = userinfos['subscriber'];
       if (subscriber == 'google') {
         await Google.signout().catchError((onError) {
@@ -189,12 +189,13 @@ class _MainAppContainerState extends State<MainAppContainer> {
                       ),
                     ),
                     const PopupMenuItem<MenuItems>(
-                        value: MenuItems.logout,
-                        child: ListTile(
-                          title: Text('Logout'),
-                          onTap: null,
-                          leading: Icon(Icons.exit_to_app),
-                        )),
+                      value: MenuItems.logout,
+                      child: ListTile(
+                        title: Text('Logout'),
+                        onTap: null,
+                        leading: Icon(Icons.exit_to_app),
+                      ),
+                    ),
                   ],
                 )
               ],
@@ -247,16 +248,19 @@ class _MainAppContainerState extends State<MainAppContainer> {
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: _currentTab == 1
           ? FloatingActionButton.extended(
-              onPressed: () async{
+              onPressed: () async {
                 final sharedPref = await SharedPreferences.getInstance();
                 if (sharedPref.containsKey('userInfos')) {
-                  final userInfos = json.decode(sharedPref.getString('userInfos'));
-                  Navigator.pushNamed(context, AskCommunityForm.routeName, arguments: userInfos);
+                  final userInfos =
+                      json.decode(sharedPref.getString('userInfos'));
+                  Navigator.pushNamed(context, AskCommunityForm.routeName,
+                      arguments: userInfos);
                 } else {
                   setState(() {
                     _currentTab = 2;
                   });
-                  snackBar(_globalkey, 'You haven\'t login to the app yet. you can do it here!');
+                  snackBar(_globalkey,
+                      'You haven\'t login to the app yet. you can do it here!');
                 }
               },
               label: Text(

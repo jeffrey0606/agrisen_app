@@ -15,7 +15,7 @@ class Facebook {
       case FacebookLoginStatus.loggedIn:
         final token = result.accessToken.token;
         final graphResponse = await http.get(
-            'https://graph.facebook.com/v2.12/me?fields=name,picture,first_name,last_name,email&access_token=${token}');
+            'https://graph.facebook.com/v2.12/me?fields=name,picture,first_name,last_name,email&access_token=$token');
         final profile = json.decode(graphResponse.body);
           
         return profile;

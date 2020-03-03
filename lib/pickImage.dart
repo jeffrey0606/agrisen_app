@@ -3,7 +3,7 @@ import 'package:image_picker/image_picker.dart';
 
 class PickImage {
 
-  static Future<void> galleryOrCameraPick(BuildContext context, Function getImage) async {
+  static Future<void> galleryOrCameraPick(BuildContext context, Function getImage ,{int key}) async {
     return showDialog<void>(
       context: context,
       builder: (builder) {
@@ -21,8 +21,9 @@ class PickImage {
               children: <Widget>[
                 ListTile(
                   onTap: () {
+                    
+                    getImage(ImageSource.camera, key: key);
                     Navigator.of(context).pop();
-                    getImage(ImageSource.camera);
                   },
                   leading: Icon(Icons.camera_alt),
                   title: Text(
@@ -31,8 +32,9 @@ class PickImage {
                 ),
                 ListTile(
                   onTap: () {
+                    
+                    getImage(ImageSource.gallery, key: key);
                     Navigator.of(context).pop();
-                    getImage(ImageSource.gallery);
                   },
                   leading: Icon(Icons.photo),
                   title: Text(

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:agrisen_app/Providers/loadComments.dart';
 import 'package:agrisen_app/Providers/loadHelps.dart';
@@ -43,7 +44,7 @@ class _QuestionsAskedState extends State<QuestionsAsked> {
             child: AskCommunityCard(
               cropName: helpsData[index]['crop_name'],
               profileImage: helpsData[index]['profile_image'],
-              cropImage: helpsData[index]['crop_image'],
+              cropImage: json.decode(helpsData[index]['crop_images'])[0],
               question: helpsData[index]['question'],
               timelapse: TimeAjuster.ajust(DateTime.parse(helpsData[index]['timestamp'])),
               userName: helpsData[index]['user_name'],

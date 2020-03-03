@@ -1,7 +1,9 @@
 import 'dart:convert';
 
+import 'package:agrisen_app/Community/CommentingPage/commentingPage.dart';
 import 'package:agrisen_app/Providers/loadCommentedHelps.dart';
 import 'package:agrisen_app/Providers/loadComments.dart';
+import 'package:agrisen_app/imagesViewer.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -80,16 +82,23 @@ class _CommentedState extends State<Commented> {
                 indent: MediaQuery.of(context).size.width * 0.26,
               ),
               itemBuilder: (context, index) {
+                final images = json.decode(commentedHelps[index]['crop_images']);
                 return InkWell(
-                  onTap: () => null,
+                  onTap: () => Navigator.pushNamed(context, CommentingPage.routeName, arguments: commentedHelps[index]['askHelp_id']),
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 5.0),
                     child: Row(
                       children: <Widget>[
-                        CircleAvatar(
-                          backgroundImage:
-                              NetworkImage('http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/AskHelpImages/${commentedHelps[index]['crop_image']}'),
-                          maxRadius: 40,
+                        InkWell(
+                          onTap: () => Navigator.of(context).pushNamed(ImagesViewer.namedRoute, arguments: {
+                            'from': 'network',
+                            'images': images
+                          }),
+                          child: CircleAvatar(
+                            backgroundImage:
+                                NetworkImage('http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/AskHelpImages/${images[0]}'),
+                            maxRadius: 40,
+                          ),
                         ),
                         SizedBox(
                           width: 5,

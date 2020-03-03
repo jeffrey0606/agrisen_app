@@ -10,6 +10,7 @@ import 'package:keyboard_visibility/keyboard_visibility.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Providers/loadHelps.dart';
+import '../../imagesViewer.dart';
 import 'aCommentCard.dart';
 import 'package:http/http.dart' as http;
 
@@ -49,7 +50,6 @@ class _CommentingPageState extends State<CommentingPage> {
     super.didChangeDependencies();
 
     if (once) {
-
       await Provider.of<LoadComments>(context).fechComments();
 
       final sharedPref = await SharedPreferences.getInstance();
@@ -61,7 +61,6 @@ class _CommentingPageState extends State<CommentingPage> {
           _isLoggin = true;
         });
       } else {
-        
         snakebar(
             'You haven\'t login to the app yet. you can do it at profile page!');
       }
@@ -124,14 +123,14 @@ class _CommentingPageState extends State<CommentingPage> {
   }
 
   @override
-  void dispose() async{
+  void dispose() async {
     super.dispose();
     _commentFocusNode.dispose();
     commentText.dispose();
     if (mounted == false) {
       //Provider.of<LoadComments>(context, listen: false).emptyComments();
       await Provider.of<LoadCommentedHelps>(context, listen: false)
-            .fechCommentedHelps(api_key);
+          .fechCommentedHelps(api_key);
       tags = [];
     }
   }
@@ -169,21 +168,23 @@ class _CommentingPageState extends State<CommentingPage> {
               if (result['status'] == 200) {
                 setState(() {
                   commentText.text = '';
+                  _isReplying = false;
                 });
                 await Provider.of<LoadComments>(context, listen: false)
                     .fechComments();
                 await Provider.of<LoadCommentedHelps>(context, listen: false)
-            .fechCommentedHelps(api_key);    
+                    .fechCommentedHelps(api_key);
               }
             }
           } else {
             setState(() {
               commentText.text = '';
+              _isReplying = false;
             });
             await Provider.of<LoadComments>(context, listen: false)
                 .fechComments();
             await Provider.of<LoadCommentedHelps>(context, listen: false)
-            .fechCommentedHelps(api_key);   
+                .fechCommentedHelps(api_key);
           }
         }
       }
@@ -201,147 +202,164 @@ class _CommentingPageState extends State<CommentingPage> {
     final parentComments = comment.getParentComnents(askHelpId);
     final help = Provider.of<LoadHelps>(context).getHelp(askHelpId);
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
-    final commentors = comment.getComentors(api_key);
-
-    print(askHelpId);
+    final commentors = comment.getComentors(api_key, askHelpId);
+    final images = json.decode(help['crop_images']);
 
     return Scaffold(
       key: _globalKey,
-      body: CustomScrollView(
-        slivers: <Widget>[
-          SliverAppBar(
-            expandedHeight: MediaQuery.of(context).size.height * .3,
-            forceElevated: true,
-            pinned: true,
-            title: Text(
-              'Comments',
-              style: TextStyle(
-                color: Colors.black,
-              ),
-            ),
-            iconTheme: IconThemeData(
-              color: Color.fromRGBO(10, 17, 40, 1.0),
-            ),
-            titleSpacing: 0,
-            flexibleSpace: FlexibleSpaceBar(
-              centerTitle: true,
-              titlePadding: EdgeInsets.symmetric(
-                horizontal: 60.0,
-              ),
-              background: Image.network(
-                'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/AskHelpImages/${help['crop_image']}',
-                fit: BoxFit.cover,
-                width: double.infinity,
-              ),
-              collapseMode: CollapseMode.parallax,
+      body: Scrollbar(
+        child: CustomScrollView(
+          slivers: <Widget>[
+            SliverAppBar(
+              expandedHeight: MediaQuery.of(context).size.height * .3,
+              forceElevated: true,
+              pinned: true,
               title: Text(
-                help['question'].endsWith('?')
-                    ? help['question']
-                    : '${help['question']} ?',
-                textAlign: TextAlign.center,
+                'Comments',
                 style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  color: Colors.white,
+                  color: Colors.black,
                 ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 3,
+              ),
+              actions: <Widget>[
+                IconButton(
+                  icon: Icon(Icons.view_carousel),
+                  onPressed: () => Navigator.of(context).pushNamed(
+                    ImagesViewer.namedRoute,
+                    arguments: {
+                      'from': 'network',
+                      'images': images,
+                    },
+                  ),
+                )
+              ],
+              iconTheme: IconThemeData(
+                color: Color.fromRGBO(10, 17, 40, 1.0),
+              ),
+              titleSpacing: 0,
+              flexibleSpace: FlexibleSpaceBar(
+                centerTitle: true,
+                titlePadding: EdgeInsets.symmetric(
+                  horizontal: 60.0,
+                ),
+                background: Image.network(
+                  'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/AskHelpImages/${images[0]}',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                ),
+                collapseMode: CollapseMode.parallax,
+                title: Text(
+                  help['question'].endsWith('?')
+                      ? help['question']
+                      : '${help['question']} ?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: Colors.white,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 3,
+                ),
               ),
             ),
-          ),
-          SliverPadding(
-            padding: EdgeInsets.only(
-              top: 5.0,
-              bottom: 70.0,
-              right: 5.0,
-              left: 5.0,
-            ),
-            sliver: parentComments.isEmpty
-                ? SliverFillRemaining(
-                    child: Center(
-                      child: Text(
-                        'No comment available yet',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 22,
+            SliverPadding(
+              padding: EdgeInsets.only(
+                top: 5.0,
+                bottom: 70.0,
+                right: 5.0,
+                left: 5.0,
+              ),
+              sliver: parentComments.isEmpty
+                  ? SliverFillRemaining(
+                      child: Center(
+                        child: Text(
+                          'No comment available yet',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                          ),
                         ),
                       ),
-                    ),
-                  )
-                : SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (builder, index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Column(
-                            children: <Widget>[
-                              Dismissible(
-                                key: UniqueKey(),
-                                confirmDismiss: (_) async {
-                                  FocusScope.of(context)
-                                      .requestFocus(_commentFocusNode);
-                                  setState(() {
-                                    _parentCommentId =
-                                        parentComments[index]['comment_id'];
-                                    _isReplying = !_isReplying;
-                                  });
-                                  print(_parentCommentId);
-                                  return false;
-                                },
-                                direction: DismissDirection.endToStart,
-                                onDismissed: (_) {},
-                                child: ACommentCard(
-                                  parentProfileImage: parentComments[index]
-                                              ['profile_image']
-                                          .toString()
-                                          .startsWith('https://')
-                                      ? parentComments[index]['profile_image']
-                                      : 'http://${parentComments[index]['profile_image']}',
-                                  parentComment: parentComments[index]
-                                      ['comment'],
-                                  commentorName: parentComments[index]
-                                      ['user_name'],
-                                  timelapse: TimeAjuster.ajust(DateTime.parse(
-                                      parentComments[index]['comment_timestamp'])),
-                                  childComments: comment.getChildrenComments(
-                                      parentComments[index]['comment_id'], askHelpId),
-                                  currentIndex: _currentIndex,
-                                  index: index,
-                                  viewReplies: _showMore,
-                                  viewRepliesFunction: () =>
-                                      _viewReplies(index),
-                                ),
-                                background: Container(
-                                  color: Colors.black12,
-                                  padding:
-                                      EdgeInsets.symmetric(horizontal: 10.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: <Widget>[
-                                      Icon(
-                                        Icons.replay,
-                                      ),
-                                      Text(
-                                        'Reply',
-                                      ),
-                                    ],
+                    )
+                  : SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (builder, index) {
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Column(
+                              children: <Widget>[
+                                Dismissible(
+                                  key: UniqueKey(),
+                                  confirmDismiss: (_) async {
+                                    FocusScope.of(context)
+                                        .requestFocus(_commentFocusNode);
+                                    setState(() {
+                                      _parentCommentId =
+                                          parentComments[index]['comment_id'];
+                                      _isReplying = !_isReplying;
+                                    });
+                                    print(_parentCommentId);
+                                    return false;
+                                  },
+                                  direction: DismissDirection.endToStart,
+                                  onDismissed: (_) {},
+                                  child: ACommentCard(
+                                    parentProfileImage: parentComments[index]
+                                                ['profile_image']
+                                            .toString()
+                                            .startsWith('https://')
+                                        ? parentComments[index]['profile_image']
+                                        : 'http://${parentComments[index]['profile_image']}',
+                                    parentComment: parentComments[index]
+                                        ['comment'],
+                                    commentorName: parentComments[index]
+                                        ['user_name'],
+                                    timelapse: TimeAjuster.ajust(DateTime.parse(
+                                        parentComments[index]
+                                            ['comment_timestamp'])),
+                                    childComments: comment.getChildrenComments(
+                                        parentComments[index]['comment_id'],
+                                        askHelpId),
+                                    currentIndex: _currentIndex,
+                                    index: index,
+                                    viewReplies: _showMore,
+                                    viewRepliesFunction: () =>
+                                        _viewReplies(index),
+                                  ),
+                                  background: Container(
+                                    color: Colors.black12,
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 10.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: <Widget>[
+                                        Icon(
+                                          Icons.replay,
+                                        ),
+                                        Text(
+                                          'Reply',
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                              if (index == parentComments.length)
-                                SizedBox(
-                                  height: keyboardHeight + 100,
-                                )
-                            ],
-                          ),
-                        );
-                      },
-                      childCount: parentComments.length,
+                                if (index == parentComments.length)
+                                  SizedBox(
+                                    height: keyboardHeight + 100,
+                                  )
+                              ],
+                            ),
+                          );
+                        },
+                        childCount: parentComments.length,
+                      ),
                     ),
-                  ),
-          )
-        ],
+            )
+          ],
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Column(
@@ -493,7 +511,7 @@ class _CommentingPageState extends State<CommentingPage> {
                         child: TextField(
                           controller: commentText,
                           onChanged: (text) {
-                            if (text.startsWith('@') && text.endsWith('@')) {
+                            if (text.endsWith('@')) {
                               setState(() {
                                 tagging = true;
                               });

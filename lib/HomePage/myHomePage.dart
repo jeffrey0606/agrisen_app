@@ -43,32 +43,34 @@ class _MyHomePageState extends State<MyHomePage> {
           }
         },
         child: */
-        ListView.builder(
-        itemCount: articlesData.length,
-        itemBuilder: ((context, index) {
-          return Column(
-            children: <Widget>[
-              index == 0 ? HomePageTopPart() : Container(),
-              SizedBox(
-                height: 10.0,
-              ),
-              ArticleCard(
-                leadingImage: articlesData[index]['cover_image'],
-                title: articlesData[index]['crop_name'],
-                subTitle: articlesData[index]['description'],
-                onTap: () => Navigator.of(context).pushNamed(
-                  FullArticlePage.nameRoute,
-                  arguments: articlesData[index]['article_id'],
+        Scrollbar(
+          child: ListView.builder(
+          itemCount: articlesData.length,
+          itemBuilder: ((context, index) {
+            return Column(
+              children: <Widget>[
+                index == 0 ? HomePageTopPart() : Container(),
+                SizedBox(
+                  height: 10.0,
                 ),
-                articleId: articlesData[index]['article_id'],
-              ),
-              SizedBox(
-                height: 5.0,
-              ),
-            ],
-          );
-        }),
+                ArticleCard(
+                  leadingImage: articlesData[index]['cover_image'],
+                  title: articlesData[index]['crop_name'],
+                  subTitle: articlesData[index]['description'],
+                  onTap: () => Navigator.of(context).pushNamed(
+                    FullArticlePage.nameRoute,
+                    arguments: articlesData[index]['article_id'],
+                  ),
+                  articleId: articlesData[index]['article_id'],
+                ),
+                SizedBox(
+                  height: 5.0,
+                ),
+              ],
+            );
+          }),
       ),
+        ),
     );
   }
 }

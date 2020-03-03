@@ -52,7 +52,7 @@ class LoadComments extends ChangeNotifier{
     return _comments.where((test) => test['parent_comment_id'] == parentCommentId && test['askHelp_id'] == askHelpId).toList();
   }
 
-  List<dynamic> getComentors(String apiKey){
+  List<dynamic> getComentors(String apiKey, String askHelpId){
     final temp = [];
 
     for(int i = 0; i < _comments.length; i++){
@@ -61,7 +61,7 @@ class LoadComments extends ChangeNotifier{
         continue;
       }else if(apiKey == _comments[i]['api_key']){
         continue;
-      }else{
+      }else if(_comments[i]['askHelp_id'] == askHelpId){
         temp.add(_comments[i]);
       }
     }

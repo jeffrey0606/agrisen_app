@@ -3,6 +3,7 @@ import 'package:agrisen_app/Providers/loadCommentedHelps.dart';
 import 'package:agrisen_app/Providers/loadComments.dart';
 import 'package:agrisen_app/Providers/loadCrops.dart';
 import 'package:agrisen_app/Providers/loadHelps.dart';
+import 'package:agrisen_app/imagesViewer.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -69,6 +70,7 @@ class _MyAppState extends State<MyApp> {
           Notifications.nameRoute: (ctx) => Notifications(),
           CommentingPage.routeName: (ctx) => CommentingPage(),
           AskCommunityForm.routeName: (ctx) => AskCommunityForm(),
+          ImagesViewer.namedRoute: (ctx) => ImagesViewer(),
         },
       ),
     );

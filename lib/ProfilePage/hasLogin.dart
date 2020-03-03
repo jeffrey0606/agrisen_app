@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../pickImage.dart';
 
@@ -11,6 +13,7 @@ import '../pickImage.dart';
 import 'package:intl/intl.dart';
 import './notifications.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:http/http.dart' as http;
 
 class HasLogin extends StatefulWidget {
   @override
@@ -19,8 +22,60 @@ class HasLogin extends StatefulWidget {
 
 class _HasLoginState extends State<HasLogin> {
   File image;
-  bool isUploading = false;
-  String imageUrl;
+  bool isUploading = false, once = true;
+  String imageUrl,
+      userName = 'Username',
+      email = 'Email',
+      profileImage = '',
+      apiKey = '';
+
+  @override
+  void didChangeDependencies() async {
+    if (once) {
+      final sharedPref = await SharedPreferences.getInstance();
+
+      if (sharedPref.containsKey('userInfos')) {
+        final userinfos = json.decode(sharedPref.getString('userInfos'));
+        setState(() {
+          apiKey = userinfos['api-key'];
+        });
+      }
+
+      if (apiKey.isNotEmpty) {
+        await getUserInfos();
+      }
+    }
+
+    once = false;
+    super.didChangeDependencies();
+  }
+
+  Future<void> getUserInfos() async {
+    try {
+      final url =
+          'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/getUserInfos.php';
+      final response = await http.get(url, headers: {'api_key': apiKey});
+
+      if (response != null) {
+        final result = json.decode(response.body);
+
+        if (result['status'] == 200) {
+          final tempProfile = result['userInfos']['profile_image'];
+          setState(() {
+            userName = result['userInfos']['user_name'];
+            email = result['userInfos']['email'];
+            profileImage = tempProfile.toString().isEmpty
+                ? ''
+                : tempProfile.toString().startsWith('https://')
+                    ? tempProfile
+                    : 'http://$tempProfile';
+          });
+        }
+      }
+    } catch (e) {
+      print('error: $e');
+    }
+  }
 
   void getImage(ImageSource imageSource) async {
     File _image = await ImagePicker.pickImage(source: imageSource);
@@ -57,6 +112,7 @@ class _HasLoginState extends State<HasLogin> {
 
   @override
   Widget build(BuildContext context) {
+    print(profileImage);
     return DefaultTabController(
       length: 2,
       child: SingleChildScrollView(
@@ -75,30 +131,27 @@ class _HasLoginState extends State<HasLogin> {
                       borderRadius: BorderRadius.all(
                         Radius.circular(50),
                       ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: imageUrl == null
-                              ? null
-                              : Border.all(
-                                  color: Colors.blue,
-                                  width: 2,
-                                ),
-                          borderRadius: BorderRadius.circular(70),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(60),
                         ),
-                        child: CircleAvatar(
-                          maxRadius: 55,
-                          backgroundImage: imageUrl == null
-                              ? null
-                              : NetworkImage(
-                                  imageUrl,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.blue,
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(60),
+                            ),
+                          ),
+                          child: profileImage.isEmpty
+                              ? SvgPicture.network(
+                                  'http://192.168.43.150/Agrisen_app/assetImages/profileImage.svg',
+                                  width: 115,
+                                )
+                              : Image.network(
+                                  profileImage,//+'?sz=3000&width=325&height=325',
+                                  width: 115,
+                                  fit: BoxFit.cover,
                                 ),
-                          child: isUploading
-                              ? CircularProgressIndicator()
-                              : imageUrl == null
-                                  ? SvgPicture.asset(
-                                      'assets/SVGPics/profileImage.svg',
-                                    )
-                                  : null,
                         ),
                       ),
                     ),
@@ -109,18 +162,23 @@ class _HasLoginState extends State<HasLogin> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: <Widget>[
-                          Text(
-                            'Username',
-                            style: TextStyle(
-                              color: Color.fromRGBO(10, 17, 40, 1.0),
-                              fontSize: 18,
+                          Container(
+                            width: double.infinity,
+                            child: Text(
+                              userName,
+                              style: TextStyle(
+                                color: Color.fromRGBO(10, 17, 40, 1.0),
+                                fontSize: 18,
+                              ),
+                              textAlign: TextAlign.left,
                             ),
                           ),
                           SizedBox(
                             height: 15,
                           ),
                           Text(
-                            'Email',
+                            email,
+                            textAlign: TextAlign.left,
                             style: TextStyle(
                               color: Color.fromRGBO(10, 17, 40, 1.0),
                               fontSize: 18,
@@ -254,7 +312,8 @@ class _NotificationTabState extends State<NotificationTab> {
         itemCount: 3,
         itemBuilder: (context, index) {
           return ListTile(
-            onTap: () => Navigator.of(context).pushNamed(Notifications.nameRoute),
+            onTap: () =>
+                Navigator.of(context).pushNamed(Notifications.nameRoute),
             leading: CircleAvatar(
               maxRadius: 30,
             ),

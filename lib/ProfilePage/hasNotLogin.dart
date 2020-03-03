@@ -349,6 +349,7 @@ class _HasNotLoginState extends State<HasNotLogin> {
                                   }
                                   return null;
                                 },
+                                keyboardType: TextInputType.visiblePassword,
                                 onSaved: (value) {},
                                 focusNode: _passwordFocusNode,
                                 style: TextStyle(fontSize: 20),
