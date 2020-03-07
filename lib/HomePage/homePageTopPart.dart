@@ -36,24 +36,11 @@ class _HomePageTopPartState extends State<HomePageTopPart> {
         ? CircularProgressIndicator()
         : Column(
             children: <Widget>[
-              SizedBox(
-                height: 10.0,
-              ),
               Container(
-                height: 160,
+                height: 180,
                 width: double.infinity,
-                margin: EdgeInsets.symmetric(horizontal: 5),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Color.fromRGBO(163, 155, 168, 1.0),
-                    style: BorderStyle.solid,
-                    width: 0,
-                  ),
-                  borderRadius: BorderRadius.circular(25.0),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(25.0),
-                  child: Stack(
+                //margin: EdgeInsets.symmetric(horizontal: 5),
+                child: Stack(
                     children: <Widget>[
                       Container(
                         width: double.infinity,
@@ -111,7 +98,6 @@ class _HomePageTopPartState extends State<HomePageTopPart> {
                       )
                     ],
                   ),
-                ),
               ),
               SizedBox(
                 height: 15.0,
@@ -180,7 +166,7 @@ class _HomePageTopPartState extends State<HomePageTopPart> {
                 ),
               ),
               SizedBox(
-                height: 5.0,
+                height: 10.0,
               ),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.0),
@@ -194,8 +180,11 @@ class _HomePageTopPartState extends State<HomePageTopPart> {
                     fontSize: 20,
                   ),
                   softWrap: true,
-                  textAlign: TextAlign.center,
+                  textAlign: TextAlign.left,
                 ),
+              ),
+              SizedBox(
+                height: 5.0,
               ),
             ],
           );

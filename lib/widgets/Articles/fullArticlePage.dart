@@ -1,3 +1,7 @@
+
+import 'package:html/dom.dart' as dom;
+import 'package:html/parser.dart' as parser;
+
 import 'package:agrisen_app/Providers/loadArticles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -15,10 +19,8 @@ class _FullArticlePageState extends State<FullArticlePage> {
   FlutterTts flutterTts = FlutterTts();
   double volume = 0.5;
   double pitch = 1.0;
-  double rate = 0.5;
+  double rate = 0.4;
   bool playing = false;
-
-  String _newVoiceText = '';
 
   void iniTts() {
     /*setState(() {
@@ -88,6 +90,14 @@ class _FullArticlePageState extends State<FullArticlePage> {
     final articleId = ModalRoute.of(context).settings.arguments as String;
     final articleData = Provider.of<LoadArticles>(context).getArticle(articleId);
 
+    String data = articleData['article_text'];
+
+    
+    data = data.replaceAll("\n", " ");
+    //data = data.replaceAll(new RegExp(r''), "");
+
+    print(data);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(articleData['crop_name']),
@@ -102,7 +112,7 @@ class _FullArticlePageState extends State<FullArticlePage> {
                   label: Text('stop'),
                 )
               : FlatButton.icon(
-                  onPressed: () => _speak(_newVoiceText, 'en-US'),
+                  onPressed: () => _speak(data, 'en-US'),
                   icon: Icon(Icons.play_arrow),
                   label: Text('play'),
                 )

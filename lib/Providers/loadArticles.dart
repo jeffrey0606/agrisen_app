@@ -11,6 +11,7 @@ class LoadArticles extends ChangeNotifier {
   }
 
   Future<void> fetchArticles() async {
+    
     try {
       final url =
           'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/fetchArticles.php';
@@ -21,6 +22,7 @@ class LoadArticles extends ChangeNotifier {
         
         if ((result['status']) == 200) {
           _articlesData = result['articlesData'];
+          print(_articlesData);
           //print('article : ${result['articlesData'][4]['article']}');
 
           /*final article = result['articlesData'][4]['article'].toString().split('\"');

@@ -174,9 +174,6 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
             Expanded(
               child: Text(
                 message,
-                overflow: TextOverflow.clip,
-                maxLines: 2,
-                softWrap: true,
               ),
             ),
           ],

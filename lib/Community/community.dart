@@ -1,11 +1,51 @@
+import 'dart:convert';
+
+import 'package:agrisen_app/Providers/loadCommentedHelps.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'AskCommunity/QuestionsAsked.dart';
 import 'Commented/commented.dart';
 
-class Community extends StatelessWidget {
+class Community extends StatefulWidget {
+  @override
+  _CommunityState createState() => _CommunityState();
+}
+
+class _CommunityState extends State<Community> {
+  bool once = true;
+  String apiKey = '';
+
+  @override
+  void didChangeDependencies() async {
+    super.didChangeDependencies();
+
+    if (once) {
+      final sharedPref = await SharedPreferences.getInstance();
+
+      if (sharedPref.containsKey('userInfos')) {
+        final userinfos = json.decode(sharedPref.getString('userInfos'));
+        _fechCommentedHelps(userinfos['api-key']);
+        setState(() {
+          apiKey = userinfos['api-key'];
+        });
+      }
+    }
+    once = false;
+  }
+
+  void _fechCommentedHelps(String apiKey) async {
+    await Provider.of<LoadCommentedHelps>(context, listen: false)
+        .fechCommentedHelps(apiKey);
+    await Provider.of<LoadCommentedHelps>(context, listen: false)
+        .fechNotYetViewedComments(apiKey);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final notYetViewedComments =
+        Provider.of<LoadCommentedHelps>(context).getNotYetViewedComments;
     return DefaultTabController(
       initialIndex: 0,
       length: 2,
@@ -41,27 +81,26 @@ class Community extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: <Widget>[
                           Text('Commented'),
-                          SizedBox(
-                            height: 20,
-                            child: Container(
-                              alignment: Alignment.center,
-                              padding: EdgeInsets.all(3),
-                              constraints: BoxConstraints(
-                                minWidth: 20,
+                          if(notYetViewedComments.isNotEmpty)
+                          Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                25,
                               ),
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(
-                                  25,
+                            ),
+                            elevation: 5,
+                            child: SizedBox(
+                              height: 11,
+                              child: Container(
+                                alignment: Alignment.center,
+                                padding: EdgeInsets.all(3),
+                                constraints: BoxConstraints(
+                                  minWidth: 13,
                                 ),
-                              ),
-                              child: FittedBox(
-                                child: Text(
-                                  '13',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    color: Colors.white,
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(
+                                    25,
                                   ),
                                 ),
                               ),

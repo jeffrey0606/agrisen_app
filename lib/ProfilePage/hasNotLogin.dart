@@ -192,22 +192,21 @@ class _HasNotLoginState extends State<HasNotLogin> {
   }
 
   snakebar(String message) {
-    Scaffold.of(context).showSnackBar(
+    _globalKey.currentState.showSnackBar(
       SnackBar(
-        content: FittedBox(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              Icon(
-                Icons.error_outline,
-                color: Colors.red,
-              ),
-              SizedBox(
-                width: 15,
-              ),
-              Text(message),
-            ],
-          ),
+        duration: Duration(seconds: 3),
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            Icon(
+              Icons.error_outline,
+              color: Colors.red,
+            ),
+            SizedBox(
+              width: 15,
+            ),
+            Expanded(child: Text(message)),
+          ],
         ),
       ),
     );
@@ -243,10 +242,11 @@ class _HasNotLoginState extends State<HasNotLogin> {
     _passwordFocusNode.dispose();
     super.dispose();
   }
-
+  final _globalKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _globalKey,
       body: _isAScreenAvailable == false
           ? Container()
           : _isLogin != false

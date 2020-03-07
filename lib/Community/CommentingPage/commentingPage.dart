@@ -49,9 +49,8 @@ class _CommentingPageState extends State<CommentingPage> {
   void didChangeDependencies() async {
     super.didChangeDependencies();
 
+    await Provider.of<LoadComments>(context).fechComments();
     if (once) {
-      await Provider.of<LoadComments>(context).fechComments();
-
       final sharedPref = await SharedPreferences.getInstance();
 
       if (sharedPref.containsKey('userInfos')) {
@@ -72,20 +71,18 @@ class _CommentingPageState extends State<CommentingPage> {
     _globalKey.currentState.showSnackBar(
       SnackBar(
         duration: Duration(seconds: 3),
-        content: FittedBox(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              Icon(
-                Icons.error_outline,
-                color: Colors.red,
-              ),
-              SizedBox(
-                width: 15,
-              ),
-              Text(message),
-            ],
-          ),
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            Icon(
+              Icons.error_outline,
+              color: Colors.red,
+            ),
+            SizedBox(
+              width: 15,
+            ),
+            Expanded(child: Text(message)),
+          ],
         ),
       ),
     );
@@ -94,6 +91,8 @@ class _CommentingPageState extends State<CommentingPage> {
   bool _showMore = false, _isAReplyOpen = false;
 
   int _currentIndex = 0;
+
+  String askHelpId = '';
 
   final commentText = TextEditingController();
 
@@ -122,17 +121,31 @@ class _CommentingPageState extends State<CommentingPage> {
     });
   }
 
+  Future<int> updateLastTimeViewed(String apiKey, String askHelpId) async {
+    try {
+      final response = await http.post(
+        'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/commentedHelps.php',
+        body: {
+          'askHelp_id': askHelpId,
+        },
+        headers: {
+          'api_key': api_key,
+        },
+      );
+      final result = json.decode(response.body);
+      if (result['status'] == 200) {
+        return 200;
+      }
+    } catch (e) {
+      print('e: $e');
+    }
+  }
+
   @override
   void dispose() async {
     super.dispose();
     _commentFocusNode.dispose();
     commentText.dispose();
-    if (mounted == false) {
-      //Provider.of<LoadComments>(context, listen: false).emptyComments();
-      await Provider.of<LoadCommentedHelps>(context, listen: false)
-          .fechCommentedHelps(api_key);
-      tags = [];
-    }
   }
 
   Future<void> sendComment(
@@ -154,6 +167,27 @@ class _CommentingPageState extends State<CommentingPage> {
         final result = json.decode(response.body);
 
         if (result['status'] == 200) {
+          final response =
+              await http.post('$url' + 'commentedHelps.php', body: {
+            'askHelp_id': askHelpId,
+          }, headers: {
+            'api_key': api_key
+          });
+
+          if (response != null) {
+            final result = json.decode(response.body);
+
+            if (result['status'] == 200) {
+              setState(() {
+                commentText.text = '';
+                _isReplying = false;
+              });
+              await Provider.of<LoadComments>(context, listen: false)
+                  .fechComments();
+              await Provider.of<LoadCommentedHelps>(context, listen: false)
+                  .fechCommentedHelps(api_key);
+            }
+          }
           if (tags.isNotEmpty) {
             final response = await http.post('$url' + 'tag.php', body: {
               'tags': json.encode(tags),
@@ -198,7 +232,10 @@ class _CommentingPageState extends State<CommentingPage> {
   @override
   Widget build(BuildContext context) {
     final comment = Provider.of<LoadComments>(context);
-    final askHelpId = ModalRoute.of(context).settings.arguments as String;
+
+    setState(() {
+      askHelpId = ModalRoute.of(context).settings.arguments as String;
+    });
     final parentComments = comment.getParentComnents(askHelpId);
     final help = Provider.of<LoadHelps>(context).getHelp(askHelpId);
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
@@ -211,18 +248,40 @@ class _CommentingPageState extends State<CommentingPage> {
         child: CustomScrollView(
           slivers: <Widget>[
             SliverAppBar(
+              backgroundColor: Colors.black.withOpacity(0.1),
               expandedHeight: MediaQuery.of(context).size.height * .3,
-              forceElevated: true,
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: () async {
+                  await updateLastTimeViewed(api_key, askHelpId)
+                      .then((onValue) async {
+                    if (onValue == 200) {
+                      await Provider.of<LoadCommentedHelps>(context,
+                              listen: false)
+                          .fechCommentedHelps(api_key);
+                      await Provider.of<LoadCommentedHelps>(context,
+                              listen: false)
+                          .fechNotYetViewedComments(api_key);
+                    }
+                  });
+                  tags = [];
+                  Navigator.of(context).pop();
+                },
+              ),
+              elevation: 3,
               pinned: true,
               title: Text(
                 'Comments',
                 style: TextStyle(
-                  color: Colors.black,
+                  color: Colors.white,
                 ),
               ),
               actions: <Widget>[
                 IconButton(
-                  icon: Icon(Icons.view_carousel),
+                  icon: Icon(
+                    Icons.view_carousel,
+                    color: Colors.white,
+                  ),
                   onPressed: () => Navigator.of(context).pushNamed(
                     ImagesViewer.namedRoute,
                     arguments: {
@@ -233,7 +292,7 @@ class _CommentingPageState extends State<CommentingPage> {
                 )
               ],
               iconTheme: IconThemeData(
-                color: Color.fromRGBO(10, 17, 40, 1.0),
+                color: Colors.white,
               ),
               titleSpacing: 0,
               flexibleSpace: FlexibleSpaceBar(
@@ -247,18 +306,21 @@ class _CommentingPageState extends State<CommentingPage> {
                   width: double.infinity,
                 ),
                 collapseMode: CollapseMode.parallax,
-                title: Text(
-                  help['question'].endsWith('?')
-                      ? help['question']
-                      : '${help['question']} ?',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                    color: Colors.white,
+                title: Padding(
+                  padding: const EdgeInsets.only(bottom: 5.0),
+                  child: Text(
+                    help['question'].endsWith('?')
+                        ? help['question']
+                        : '${help['question']} ?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: Colors.white,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 3,
                   ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 3,
                 ),
               ),
             ),

@@ -5,8 +5,37 @@ import 'dart:convert';
 class LoadCommentedHelps extends ChangeNotifier {
   List<dynamic> _commentedHelps = [];
 
-  List<dynamic> get getCommentedHelps {
+  dynamic _notYetViewedComments = {};
+
+  dynamic get getCommentedHelps {
     return [..._commentedHelps];
+  }
+
+  Map<String, int> get getNotYetViewedComments {
+    return {..._notYetViewedComments};
+  }
+
+  Future<void> fechNotYetViewedComments(String apiKey) async {
+    try {
+      final url =
+          'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/fetchCommentedHelps.php?notYetViewedComments';
+      final response = await http.get(url, headers: {'api_key': apiKey});
+
+      if (response != null) {
+        final result = json.decode(response.body);
+        print(result['notYetViewedComments']);
+        if (result['notYetViewedComments'] != null) {
+          _notYetViewedComments = result['notYetViewedComments'];
+        } else {
+          _notYetViewedComments = {};
+        }
+      }
+
+      notifyListeners();
+    } catch (err) {
+      print('err : $err');
+      throw err;
+    }
   }
 
   Future<void> fechCommentedHelps(String apiKey) async {
@@ -20,6 +49,7 @@ class LoadCommentedHelps extends ChangeNotifier {
 
         if ((result['status']) == 200) {
           _commentedHelps = result['commentedHelps'];
+          print(_commentedHelps);
         }
       }
 
@@ -30,7 +60,7 @@ class LoadCommentedHelps extends ChangeNotifier {
     }
   }
 
-  List<dynamic> commentedHelps() {
+  /*List<dynamic> commentedHelps() {
     final temp = [];
 
     for (int i = 0; i < _commentedHelps.length; i++) {
@@ -43,5 +73,5 @@ class LoadCommentedHelps extends ChangeNotifier {
     }
 
     return temp;
-  }
+  }*/
 }

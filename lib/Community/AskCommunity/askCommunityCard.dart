@@ -31,21 +31,12 @@ class AskCommunityCard extends StatefulWidget {
 
 class _AskCommunityCardState extends State<AskCommunityCard> {
   bool once = true;
-  String commentsNumber = '0';
 
   @override
   void didChangeDependencies() async {
     if (once) {
       await Provider.of<LoadComments>(context, listen: false)
           .fechComments();
-
-      final temp = Provider.of<LoadComments>(context, listen: false)
-          .getCommentsNumber(widget.askHelpId)
-          .toString();
-
-      setState(() {
-        commentsNumber = temp;
-      });
     }
     once = false;
     super.didChangeDependencies();
@@ -53,6 +44,9 @@ class _AskCommunityCardState extends State<AskCommunityCard> {
 
   @override
   Widget build(BuildContext context) {
+    final commentsNumber = Provider.of<LoadComments>(context, listen: false)
+          .getCommentsNumber(widget.askHelpId)
+          .toString();
     return Container(
       margin: EdgeInsets.only(top: 5.0, left: 0, right: 0, bottom: 5),
       child: Card(
