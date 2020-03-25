@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class ArticleCard extends StatelessWidget {
@@ -44,12 +45,25 @@ class ArticleCard extends StatelessWidget {
                     bottomLeft: Radius.circular(15.0),
                   ),
                   child: Hero(
-                    tag: this.articleId,
-                    child: Image.network(
-                      this.leadingImage,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+                      tag: this.articleId,
+                      child: CachedNetworkImage(
+                        imageUrl: this.leadingImage,
+                        errorWidget: (ctx, str, obj) {
+                          return Image.asset(
+                            'assets/imageNotFoundOrange.png',
+                            fit: BoxFit.cover,
+                          );
+                        },
+                        placeholder: (str, obj) {
+                          return Center(
+                            child: CircularProgressIndicator(
+                              backgroundColor: Colors.lightBlue,
+                              strokeWidth: 1,
+                            ),
+                          );
+                        },
+                        fit: BoxFit.cover,
+                      )),
                 ),
               ),
             ),

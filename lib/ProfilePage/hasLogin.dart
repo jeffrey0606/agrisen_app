@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
@@ -243,35 +244,25 @@ class _HasLoginState extends State<HasLogin> {
                               ),
                             ),
                             child: profileImage.isEmpty
-                                    ? SvgPicture.network(
+                                ? SvgPicture.network(
+                                    'http://192.168.43.150/Agrisen_app/assetImages/profileImage.svg',
+                                    width: 115,
+                                  )
+                                : CachedNetworkImage(
+                                    imageUrl: profileImage,
+                                    errorWidget: (context, str, obj) {
+                                      return SvgPicture.network(
                                         'http://192.168.43.150/Agrisen_app/assetImages/profileImage.svg',
                                         width: 115,
-                                      )
-                                    : Image.network(
-                                        profileImage, // +'?sz=5000',
+                                      );
+                                    },
+                                    placeholder: (context, str) {
+                                      return SvgPicture.network(
+                                        'http://192.168.43.150/Agrisen_app/assetImages/profileImage.svg',
                                         width: 115,
-                                        fit: BoxFit.cover,
-                                        loadingBuilder: (BuildContext context,
-                                            Widget child,
-                                            ImageChunkEvent loadingProgress) {
-                                          if (loadingProgress == null){
-                                            return child;
-                                          }
-                                          return Center(
-                                            child: CircularProgressIndicator(
-                                              backgroundColor: Colors.white,
-                                              value: loadingProgress
-                                                          .expectedTotalBytes !=
-                                                      null
-                                                  ? loadingProgress
-                                                          .cumulativeBytesLoaded /
-                                                      loadingProgress
-                                                          .expectedTotalBytes
-                                                  : null,
-                                            ),
-                                          );
-                                        },
-                                      ),
+                                      );
+                                    },
+                                  ),
                           ),
                         ),
                       ),

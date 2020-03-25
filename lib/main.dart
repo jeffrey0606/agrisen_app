@@ -10,7 +10,7 @@ import 'package:provider/provider.dart';
 import 'PlantDiseaseDetection/diseaseDetectionPage.dart';
 import 'ProfilePage/notifications.dart';
 import 'MainAppContainer.dart';
-import 'widgets/Articles/fullArticlePage.dart';
+import './HomePage/fullArticlePage.dart';
 import './Community/CommentingPage/commentingPage.dart';
 import './Community/AskCommunity/askCommunityForm.dart';
 

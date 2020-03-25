@@ -14,22 +14,14 @@ class LoadArticles extends ChangeNotifier {
     
     try {
       final url =
-          'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/fetchArticles.php';
+          'http://192.168.43.150/agrisen-api/index.php/Home/fetch_articles';
       final response = await http.get(url);
 
       if (response != null) {
         final result = json.decode(response.body);
         
-        if ((result['status']) == 200) {
-          _articlesData = result['articlesData'];
-          print(_articlesData);
-          //print('article : ${result['articlesData'][4]['article']}');
-
-          /*final article = result['articlesData'][4]['article'].toString().split('\"');
-          final coverImageLink = article.firstWhere((test) => test.trim().contains('http'));
-          print('article $article');
-          print('link: $coverImageLink');*/
-        }
+        _articlesData = result;
+        print(result);
       }
       notifyListeners();
     } catch (err) {
@@ -38,7 +30,23 @@ class LoadArticles extends ChangeNotifier {
     }
   }
 
-  dynamic getArticle(String articleId) {
+  Future<dynamic> getArticle(String articleId) async{
+    try {
+      final url = 'http://192.168.43.150/agrisen-api/index.php/Home/fetch_articles/${int.parse(articleId)}';
+      final response = await http.get(url);
+
+      if (response != null) {
+        final result = json.decode(response.body);
+        
+        _articlesData = result;
+        print(result);
+      }
+      notifyListeners();
+    } catch (err) {
+      print('err : $err');
+      throw err;
+    }
+
     return _articlesData.firstWhere((test) => test['article_id'] == articleId);
   }
 }

@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:agrisen_app/Providers/loadComments.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class AskCommunityCard extends StatefulWidget {
   final String cropName;
@@ -35,8 +37,7 @@ class _AskCommunityCardState extends State<AskCommunityCard> {
   @override
   void didChangeDependencies() async {
     if (once) {
-      await Provider.of<LoadComments>(context, listen: false)
-          .fechComments();
+      await Provider.of<LoadComments>(context, listen: false).fechComments();
     }
     once = false;
     super.didChangeDependencies();
@@ -45,8 +46,17 @@ class _AskCommunityCardState extends State<AskCommunityCard> {
   @override
   Widget build(BuildContext context) {
     final commentsNumber = Provider.of<LoadComments>(context, listen: false)
-          .getCommentsNumber(widget.askHelpId)
-          .toString();
+        .getCommentsNumber(widget.askHelpId)
+        .toString();
+    var nameInitials = '';
+    widget.userName.split(' ').forEach((f) {
+      setState(() {
+        if (nameInitials.length == 1) {
+          nameInitials += ' ';
+        }
+        nameInitials += '${f.substring(0, 1)}';
+      });
+    });
     return Container(
       margin: EdgeInsets.only(top: 5.0, left: 0, right: 0, bottom: 5),
       child: Card(
@@ -74,11 +84,65 @@ class _AskCommunityCardState extends State<AskCommunityCard> {
                         children: <Widget>[
                           Row(
                             children: <Widget>[
-                              CircleAvatar(
-                                maxRadius: 25,
-                                backgroundColor: Colors.blue,
-                                backgroundImage:
-                                    NetworkImage(widget.profileImage),
+                              ClipRRect(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(60),
+                                ),
+                                child: Container(
+                                  width: 55,
+                                  height: 55,
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue,
+                                    gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          //Colors.lime,
+                                          //Colors.pink,
+                                          Colors.cyan,
+                                          Colors.cyanAccent
+                                        ]),
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(60),
+                                    ),
+                                  ),
+                                  child: widget.profileImage.toString().isEmpty
+                                      ? Center(
+                                          child: Text(
+                                            nameInitials.toUpperCase(),
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18,
+                                            ),
+                                          ),
+                                        )
+                                      : CachedNetworkImage(
+                                          imageUrl: widget.profileImage
+                                                  .toString()
+                                                  .startsWith('https://')
+                                              ? widget.profileImage
+                                              : 'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/ProfileImages/${widget.profileImage}',
+                                          errorWidget: (context, str, obj) {
+                                            return Center(
+                                              child: Text(
+                                                nameInitials.toUpperCase(),
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 18,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          placeholder: (context, str) {
+                                            return SvgPicture.network(
+                                              'http://192.168.43.150/Agrisen_app/assetImages/profileImage.svg',
+                                              width: 115,
+                                            );
+                                          },
+                                        ),
+                                ),
                               ),
                               SizedBox(
                                 width: 15,
@@ -86,6 +150,7 @@ class _AskCommunityCardState extends State<AskCommunityCard> {
                               Column(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceEvenly,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
                                   Text(
                                     this.widget.userName,

@@ -9,8 +9,15 @@ import 'AskCommunity/QuestionsAsked.dart';
 import 'Commented/commented.dart';
 
 class Community extends StatefulWidget {
+  final Function alert;
+  Community({@required this.alert});
   @override
   _CommunityState createState() => _CommunityState();
+}
+
+enum MenuItems {
+  settings,
+  logout,
 }
 
 class _CommunityState extends State<Community> {
@@ -54,6 +61,38 @@ class _CommunityState extends State<Community> {
           headerSliverBuilder: (context, boxIsScrolled) {
             return <Widget>[
               SliverAppBar(
+                actions: <Widget>[
+                  PopupMenuButton<MenuItems>(
+                    onSelected: (items) {
+                      switch (items) {
+                        case MenuItems.logout:
+                          widget.alert();
+                          break;
+                        case MenuItems.settings:
+                          break;
+                      }
+                    },
+                    itemBuilder: (BuildContext context) =>
+                        <PopupMenuEntry<MenuItems>>[
+                      const PopupMenuItem<MenuItems>(
+                        value: MenuItems.settings,
+                        child: ListTile(
+                          title: Text('Settings'),
+                          onTap: null,
+                          leading: Icon(Icons.settings),
+                        ),
+                      ),
+                      const PopupMenuItem<MenuItems>(
+                        value: MenuItems.logout,
+                        child: ListTile(
+                          title: Text('Logout'),
+                          onTap: null,
+                          leading: Icon(Icons.exit_to_app),
+                        ),
+                      ),
+                    ],
+                  )
+                ],
                 forceElevated: true,
                 floating: true,
                 pinned: true,

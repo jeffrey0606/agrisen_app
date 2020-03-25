@@ -88,9 +88,9 @@ class _FullArticlePageState extends State<FullArticlePage> {
   @override
   Widget build(BuildContext context) {
     final articleId = ModalRoute.of(context).settings.arguments as String;
-    final articleData = Provider.of<LoadArticles>(context).getArticle(articleId);
+    final article = Provider.of<LoadArticles>(context).getArticle(articleId);
 
-    String data = articleData['article_text'];
+    String data = '';
 
     
     data = data.replaceAll("\n", " ");
@@ -100,7 +100,7 @@ class _FullArticlePageState extends State<FullArticlePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(articleData['crop_name']),
+        //title: Text(articleData['crop_name']),
         iconTheme: IconThemeData(
           color: Color.fromRGBO(10, 17, 40, 1.0),
         ),
@@ -118,28 +118,10 @@ class _FullArticlePageState extends State<FullArticlePage> {
                 )
         ],
       ),
-      body: Container(
-        padding: EdgeInsets.all(8.0),
-        child: Hero(
-          tag: articleId,
-          child:
-              /*FadeInImage(
-            placeholder: AssetImage('assets/testImage1.png'),
-            image: NetworkImage(
-              articleData.leadingImage,
-            ),
-            fit: BoxFit.cover,
-          ),*/
-              SingleChildScrollView(
-                  child: Column(
-            children: <Widget>[
-              Html(
-                data: articleData['article'],
-              ),
-            ],
-          )),
-        ),
-      ),
+      body: FutureBuilder(
+        future: article,
+        builder: (ded,efe){},
+      )
     );
   }
 }

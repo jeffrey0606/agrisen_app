@@ -1,76 +1,211 @@
-import 'package:agrisen_app/Providers/loadArticles.dart';
-import 'package:provider/provider.dart';
-import '../widgets/Articles/ArticleCard.dart';
-import '../widgets/Articles/fullArticlePage.dart';
+import 'dart:convert';
+
+import 'package:agrisen_app/HomePage/articlesWidget.dart';
+import 'package:agrisen_app/HomePage/carouselWidget.dart';
+import 'package:agrisen_app/HomePage/cropsWidget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
+import 'package:http/http.dart' as http;
 
-import 'homePageTopPart.dart';
-
-class MyHomePage extends StatefulWidget {
+class Home extends StatefulWidget {
+  final Function alert;
+  final Function changeItemView;
+  Home({@required this.alert, this.changeItemView});
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _HomeState createState() => _HomeState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  bool _isScrolling = false, once = true;
+enum MenuItems {
+  settings,
+  logout,
+}
+
+class _HomeState extends State<Home> {
+  var _showAppBar = true;
+
+  Future _carouselImages, _cropsData, _articleData;
+
+  _getCarouselImages() async {
+    return await http.get(
+        'http://161.35.10.255/agrisen-api/index.php/Home/fetch_carousel_images');
+  }
+
+  _getCrops() async {
+    return await http
+        .get('http://161.35.10.255/agrisen-api/index.php/Home/fetch_crops');
+  }
+
+  _getArticles() async {
+    return await http
+        .get('http://161.35.10.255/agrisen-api/index.php/Home/fetch_articles');
+  }
+
+  changeItemView(bool show) {
+    setState(() {
+      _showAppBar = show;
+    });
+  }
 
   @override
-  void didChangeDependencies() async{
-    if(once){
-      await Provider.of<LoadArticles>(context).fetchArticles();
-    }
-    once = false;
-    super.didChangeDependencies();
+  void initState() {
+    _carouselImages = _getCarouselImages();
+    _cropsData = _getCrops();
+    _articleData = _getArticles();
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    final loadArticles = Provider.of<LoadArticles>(context);
-    final articlesData = loadArticles.getArticlesData;
-
-    return Container(
-      child:
-          /*NotificationListener<ScrollNotification>(
-        onNotification: (scrollNotification) {
-          if (scrollNotification is ScrollStartNotification) {
+    return Scaffold(
+      appBar: PreferredSize(
+        preferredSize:
+            Size(AppBar().preferredSize.width, AppBar().preferredSize.height),
+        child: AnimatedContainer(
+          duration: Duration(milliseconds: 100),
+          height: _showAppBar ? AppBar().preferredSize.height + AppBar().preferredSize.height : 0,
+          child: AppBar(
+            title: Text('Agrisen'),
+            centerTitle: true,
+            actions: <Widget>[
+              PopupMenuButton<MenuItems>(
+                onSelected: (items) {
+                  switch (items) {
+                    case MenuItems.logout:
+                      widget.alert();
+                      break;
+                    case MenuItems.settings:
+                      break;
+                  }
+                },
+                itemBuilder: (BuildContext context) =>
+                    <PopupMenuEntry<MenuItems>>[
+                  const PopupMenuItem<MenuItems>(
+                    value: MenuItems.settings,
+                    child: ListTile(
+                      title: Text('Settings'),
+                      onTap: null,
+                      leading: Icon(Icons.settings),
+                    ),
+                  ),
+                  const PopupMenuItem<MenuItems>(
+                    value: MenuItems.logout,
+                    child: ListTile(
+                      title: Text('Logout'),
+                      onTap: null,
+                      leading: Icon(Icons.exit_to_app),
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
+      ),
+      body: NotificationListener<UserScrollNotification>(
+        onNotification: (UserScrollNotification) {
+          if (UserScrollNotification.direction == ScrollDirection.forward) {
             setState(() {
-              _isScrolling = true;
+              widget.changeItemView(false, 'button');
+              widget.changeItemView(false, 'bottomBar');
+              changeItemView(false);
             });
-          } else if (scrollNotification is ScrollEndNotification) {
+          } else if (UserScrollNotification.direction == ScrollDirection.idle) {
             setState(() {
-              _isScrolling = false;
+              widget.changeItemView(true, 'button');
+              widget.changeItemView(true, 'bottomBar');
+              changeItemView(true);
+            });
+          } else if (UserScrollNotification.direction ==
+              ScrollDirection.reverse) {
+            setState(() {
+              widget.changeItemView(false, 'button');
+              widget.changeItemView(false, 'bottomBar');
+              changeItemView(false);
             });
           }
         },
-        child: */
-        Scrollbar(
-          child: ListView.builder(
-          itemCount: articlesData.length,
-          itemBuilder: ((context, index) {
-            return Column(
+        child: Container(
+          child: SingleChildScrollView(
+            child: Column(
               children: <Widget>[
-                index == 0 ? HomePageTopPart() : Container(),
+                FutureBuilder<dynamic>(
+                  future: _carouselImages,
+                  builder: (BuildContext buildContext,
+                      AsyncSnapshot<dynamic> snapshot) {
+                    switch (snapshot.connectionState) {
+                      case ConnectionState.waiting:
+                        return CarouselSkeletonWidget();
+                      case ConnectionState.done:
+                        if (snapshot.hasData) {
+                          http.Response data = snapshot.data;
+                          return CarouselWidget(
+                            carouselImages: json.decode(data.body),
+                          );
+                        } else if (snapshot.hasError) {
+                          print('custom err: ${snapshot.error}');
+                        }
+                        return Text('no data available');
+                      default:
+                        return CarouselSkeletonWidget();
+                    }
+                  },
+                ),
+                SizedBox(
+                  height: 15.0,
+                ),
+                FutureBuilder<dynamic>(
+                  future: _cropsData,
+                  builder: (BuildContext buildContext,
+                      AsyncSnapshot<dynamic> snapshot) {
+                    switch (snapshot.connectionState) {
+                      case ConnectionState.waiting:
+                        return CropSkeletonWidget();
+                      case ConnectionState.done:
+                        if (snapshot.hasData) {
+                          http.Response data = snapshot.data;
+                          return CropWidget(
+                            cropsList: json.decode(data.body),
+                          );
+                        } else if (snapshot.hasError) {
+                          print('custom err: ${snapshot.error}');
+                        }
+                        return Text('no data available');
+                      default:
+                        return Container();
+                    }
+                  },
+                ),
                 SizedBox(
                   height: 10.0,
                 ),
-                ArticleCard(
-                  leadingImage: articlesData[index]['cover_image'],
-                  title: articlesData[index]['crop_name'],
-                  subTitle: articlesData[index]['description'],
-                  onTap: () => Navigator.of(context).pushNamed(
-                    FullArticlePage.nameRoute,
-                    arguments: articlesData[index]['article_id'],
-                  ),
-                  articleId: articlesData[index]['article_id'],
-                ),
-                SizedBox(
-                  height: 5.0,
+                FutureBuilder<dynamic>(
+                  future: _articleData,
+                  builder: (BuildContext buildContext,
+                      AsyncSnapshot<dynamic> snapshot) {
+                    switch (snapshot.connectionState) {
+                      case ConnectionState.waiting:
+                        return ArticlesSkeletonWidget();
+                      case ConnectionState.done:
+                        if (snapshot.hasData) {
+                          http.Response data = snapshot.data;
+                          return ArticlesWidget(
+                            articlesData: json.decode(data.body),
+                          );
+                        } else if (snapshot.hasError) {
+                          print('custom err: ${snapshot.error}');
+                        }
+                        return Text('no data available');
+                      default:
+                        return Container();
+                    }
+                  },
                 ),
               ],
-            );
-          }),
-      ),
+            ),
+          ),
         ),
+      ),
     );
   }
 }

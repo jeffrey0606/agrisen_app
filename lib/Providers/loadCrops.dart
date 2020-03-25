@@ -18,8 +18,9 @@ class LoadCrops extends ChangeNotifier {
   Future<void> _fetchCarouselImages() async {
     try {
       final response = await http
-          .get('http://192.168.43.150/Agrisen_app/fetchCarouselImages.php');
+          .get('http://161.35.10.255/agrisen-api/index.php/Home/fetch_carousel_images');
       if (response != null) {
+        print('coarou: ${json.decode(response.body)}');
         _carouselImages = json.decode(response.body);
       }
       
@@ -32,15 +33,14 @@ class LoadCrops extends ChangeNotifier {
   Future<void> fetchCrops() async{
 
     try{
-      final url = 'http://192.168.43.150/Agrisen_app/AdimFormsApis/fetchCrops.php';
+      final url = 'http://161.35.10.255/agrisen-api/index.php/Home/fetch_crops';
       final response = await http.get(url);
 
       if(response != null){
+        print('crops: ${json.decode(response.body)}');
         final result = json.decode(response.body);
 
-        if(result['status'] == 200){
-          _cropsData = result['data'];
-        }
+        _cropsData = result;
         await _fetchCarouselImages();
       }
     }catch(err){

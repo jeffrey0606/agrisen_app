@@ -5,8 +5,8 @@ import 'package:agrisen_app/Providers/google.dart';
 import 'package:agrisen_app/Providers/loadHelps.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
 import 'HomePage/myHomePage.dart';
 import 'PlantDiseaseDetection/diseaseDetectionPage.dart';
@@ -28,17 +28,12 @@ enum MenuItems {
 class _MainAppContainerState extends State<MainAppContainer> {
   int _currentTab = 0;
   bool once = true;
-  final List<Widget> screens = [
-    MyHomePage(),
-    Community(),
-    HasNotLogin(),
-  ];
 
   @override
   void didChangeDependencies() async {
     if (once) {
-      await Provider.of<LoadHelps>(context).fetchHelps();
-      await Provider.of<LoadComments>(context, listen: false).fechComments();
+      //await Provider.of<LoadHelps>(context).fetchHelps();
+      //await Provider.of<LoadComments>(context, listen: false).fechComments();
     }
     once = false;
     super.didChangeDependencies();
@@ -116,8 +111,22 @@ class _MainAppContainerState extends State<MainAppContainer> {
   }
 
   final _globalkey = GlobalKey<ScaffoldState>();
+  var _showButton = true, _showBottomBar = true;
 
-  Future<void> alert(GlobalKey<ScaffoldState> globalKey) async {
+  changeItemView(bool show, String what) {
+    if (what == 'button') {
+      setState(() {
+        _showButton = show;
+      });
+    }
+    if (what == 'bottomBar') {
+      setState(() {
+        _showBottomBar = show;
+      });
+    }
+  }
+
+  Future<void> alert() async {
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -139,7 +148,7 @@ class _MainAppContainerState extends State<MainAppContainer> {
             FlatButton(
               onPressed: () async {
                 Navigator.pop(context);
-                await signout(globalKey);
+                await signout(_globalkey);
               },
               child: Text('Yes'),
             )
@@ -155,11 +164,13 @@ class _MainAppContainerState extends State<MainAppContainer> {
     super.dispose();
   }
 
+  bool _appbarVisible = false, _bottomNavBarVisible = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _globalkey,
-      appBar: _currentTab == 1
+      appBar: _currentTab == 1 || _currentTab == 0
           ? null
           : AppBar(
               title: Text('Agrisen'),
@@ -172,7 +183,7 @@ class _MainAppContainerState extends State<MainAppContainer> {
                   onSelected: (items) {
                     switch (items) {
                       case MenuItems.logout:
-                        alert(_globalkey);
+                        alert();
                         break;
                       case MenuItems.settings:
                         break;
@@ -200,50 +211,63 @@ class _MainAppContainerState extends State<MainAppContainer> {
                 )
               ],
             ),
-      body: screens.elementAt(_currentTab),
-      bottomNavigationBar: BottomNavigationBar(
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: SvgPicture.asset(
-              'assets/SVGPics/home.svg',
-              height: _currentTab == 0 ? 25 : 15,
-              color: _currentTab == 0
-                  ? Color.fromRGBO(10, 17, 40, 1.0)
-                  : Colors.grey,
+      body: _currentTab == 0
+          ? Home(
+              alert: alert,
+              changeItemView: changeItemView,
+            )
+          : _currentTab == 1
+              ? Community(
+                  alert: alert,
+                )
+              : _currentTab == 2 ? HasNotLogin() : null,
+      bottomNavigationBar: AnimatedContainer(
+        duration: Duration(milliseconds: 100),
+        height: _showBottomBar ? AppBar().preferredSize.height + 4 : 0,
+        child: BottomNavigationBar(
+          items: <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset(
+                'assets/SVGPics/home.svg',
+                height: _currentTab == 0 ? 25 : 15,
+                color: _currentTab == 0
+                    ? Color.fromRGBO(10, 17, 40, 1.0)
+                    : Colors.grey,
+              ),
+              title: Text('home'),
             ),
-            title: Text('home'),
-          ),
-          BottomNavigationBarItem(
-            icon: SvgPicture.asset(
-              'assets/SVGPics/askcomunity.svg',
-              height: _currentTab == 1 ? 30 : 25,
-              color: _currentTab == 1
-                  ? Color.fromRGBO(10, 17, 40, 1.0)
-                  : Colors.grey,
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset(
+                'assets/SVGPics/askcomunity.svg',
+                height: _currentTab == 1 ? 30 : 25,
+                color: _currentTab == 1
+                    ? Color.fromRGBO(10, 17, 40, 1.0)
+                    : Colors.grey,
+              ),
+              title: Text('community'),
             ),
-            title: Text('community'),
-          ),
-          BottomNavigationBarItem(
-            icon: SvgPicture.asset(
-              'assets/SVGPics/profile.svg',
-              height: _currentTab == 2 ? 30 : 20,
-              color: _currentTab == 2
-                  ? Color.fromRGBO(10, 17, 40, 1.0)
-                  : Colors.grey,
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset(
+                'assets/SVGPics/profile.svg',
+                height: _currentTab == 2 ? 30 : 20,
+                color: _currentTab == 2
+                    ? Color.fromRGBO(10, 17, 40, 1.0)
+                    : Colors.grey,
+              ),
+              title: Text('profile'),
             ),
-            title: Text('profile'),
-          ),
-        ],
-        backgroundColor: Color.fromRGBO(237, 245, 252, 1.0),
-        elevation: 15,
-        selectedItemColor: Color.fromRGBO(10, 17, 40, 1.0),
-        unselectedItemColor: Colors.grey,
-        currentIndex: _currentTab,
-        onTap: (index) {
-          setState(() {
-            _currentTab = index;
-          });
-        },
+          ],
+          backgroundColor: Color.fromRGBO(237, 245, 252, 1.0),
+          elevation: 15,
+          selectedItemColor: Color.fromRGBO(10, 17, 40, 1.0),
+          unselectedItemColor: Colors.grey,
+          currentIndex: _currentTab,
+          onTap: (index) {
+            setState(() {
+              _currentTab = index;
+            });
+          },
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: _currentTab == 1
@@ -275,19 +299,25 @@ class _MainAppContainerState extends State<MainAppContainer> {
               ),
               backgroundColor: Color.fromRGBO(10, 17, 40, 1.0),
             )
-          : FloatingActionButton(
-              onPressed: () => Navigator.of(context)
-                  .pushNamed(DiseaseDetectionPage.nameRoute),
-              child: ImageIcon(
-                AssetImage(
-                  'assets/runTestIcon.png',
+          : AnimatedOpacity(
+              opacity: _showButton ? 1.0 : 0,
+              child: FloatingActionButton(
+                onPressed: () => Navigator.of(context)
+                    .pushNamed(DiseaseDetectionPage.nameRoute),
+                child: ImageIcon(
+                  AssetImage(
+                    'assets/runTestIcon.png',
+                  ),
+                  color: Color.fromRGBO(237, 245, 252, 1.0),
+                  size: 40,
                 ),
-                color: Color.fromRGBO(237, 245, 252, 1.0),
-                size: 40,
+                elevation: 5,
+                tooltip: 'check for plant disease',
+                backgroundColor: Color.fromRGBO(10, 17, 40, 1.0),
               ),
-              elevation: 5,
-              tooltip: 'check for plant disease',
-              backgroundColor: Color.fromRGBO(10, 17, 40, 1.0),
+              duration: Duration(
+                milliseconds: 300,
+              ),
             ),
     );
   }
