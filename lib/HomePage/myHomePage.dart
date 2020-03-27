@@ -11,7 +11,9 @@ import 'package:http/http.dart' as http;
 class Home extends StatefulWidget {
   final Function alert;
   final Function changeItemView;
+
   Home({@required this.alert, this.changeItemView});
+
   @override
   _HomeState createState() => _HomeState();
 }
@@ -47,6 +49,14 @@ class _HomeState extends State<Home> {
     });
   }
 
+  bool _prevent = false;
+
+  preventCropScroll(bool prevent) {
+    setState(() {
+      _prevent = prevent;
+    });
+  }
+
   @override
   void initState() {
     _carouselImages = _getCarouselImages();
@@ -63,7 +73,9 @@ class _HomeState extends State<Home> {
             Size(AppBar().preferredSize.width, AppBar().preferredSize.height),
         child: AnimatedContainer(
           duration: Duration(milliseconds: 100),
-          height: _showAppBar ? AppBar().preferredSize.height + AppBar().preferredSize.height : 0,
+          height: _showAppBar
+              ? AppBar().preferredSize.height + AppBar().preferredSize.height
+              : 0,
           child: AppBar(
             title: Text('Agrisen'),
             centerTitle: true,
@@ -104,26 +116,27 @@ class _HomeState extends State<Home> {
       ),
       body: NotificationListener<UserScrollNotification>(
         onNotification: (UserScrollNotification) {
-          if (UserScrollNotification.direction == ScrollDirection.forward) {
-            setState(() {
-              widget.changeItemView(false, 'button');
-              widget.changeItemView(false, 'bottomBar');
-              changeItemView(false);
-            });
-          } else if (UserScrollNotification.direction == ScrollDirection.idle) {
-            setState(() {
-              widget.changeItemView(true, 'button');
-              widget.changeItemView(true, 'bottomBar');
-              changeItemView(true);
-            });
-          } else if (UserScrollNotification.direction ==
-              ScrollDirection.reverse) {
-            setState(() {
-              widget.changeItemView(false, 'button');
-              widget.changeItemView(false, 'bottomBar');
-              changeItemView(false);
-            });
+          if (!_prevent) {
+            if (UserScrollNotification.direction == ScrollDirection.forward) {
+              setState(() {
+                widget.changeItemView(false);
+                changeItemView(false);
+              });
+            } else if (UserScrollNotification.direction ==
+                ScrollDirection.idle) {
+              setState(() {
+                widget.changeItemView(true);
+                changeItemView(true);
+              });
+            } else if (UserScrollNotification.direction ==
+                ScrollDirection.reverse) {
+              setState(() {
+                widget.changeItemView(false);
+                changeItemView(false);
+              });
+            }
           }
+          return;
         },
         child: Container(
           child: SingleChildScrollView(
@@ -166,6 +179,7 @@ class _HomeState extends State<Home> {
                           http.Response data = snapshot.data;
                           return CropWidget(
                             cropsList: json.decode(data.body),
+                            prevent: preventCropScroll,
                           );
                         } else if (snapshot.hasError) {
                           print('custom err: ${snapshot.error}');

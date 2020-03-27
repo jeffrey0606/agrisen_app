@@ -29,31 +29,33 @@ class ArticlesWidget extends StatelessWidget {
         SizedBox(
           height: 15.0,
         ),
-        Column(
-          children: articlesData.map((articleData) {
-            final index = articlesData.indexOf(articleData);
-            return Column(
-              children: <Widget>[
-                ArticleCard(
-                  leadingImage: articleData['cover_image'],
-                  title: articleData['crop'],
-                  subTitle: articleData['description'],
-                  onTap: () => Navigator.of(context).pushNamed(
-                    FullArticlePage.nameRoute,
-                    arguments: articleData['article_id'],
+        Container(
+          margin: EdgeInsets.only(bottom: AppBar().preferredSize.height + 80,),
+          child: Column(
+            children: articlesData.map((articleData) {
+              return Column(
+                children: <Widget>[
+                  ArticleCard(
+                    leadingImage: articleData['cover_image'],
+                    title: articleData['crop'],
+                    subTitle: articleData['description'],
+                    onTap: () => Navigator.of(context).pushNamed(
+                      FullArticlePage.nameRoute,
+                      arguments: [
+                        articleData['article_id'],
+                        articleData['crop'],
+                        articleData['description'],
+                      ],
+                    ),
+                    articleId: articleData['article_id'],
                   ),
-                  articleId: articleData['article_id'],
-                ),
-                SizedBox(
-                  height: 15.0,
-                ),
-                if (index == articlesData.length)
                   SizedBox(
-                    height: AppBar().preferredSize.height + 4,
+                    height: 15.0,
                   ),
-              ],
-            );
-          }).toList(),
+                ],
+              );
+            }).toList(),
+          ),
         ),
       ],
     );

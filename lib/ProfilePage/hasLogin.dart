@@ -47,27 +47,6 @@ class _HasLoginState extends State<HasLogin> {
       }
     }
 
-    /*try {
-      precacheImage(imageProvider.image, context, onError: (_, _1) {
-        if (_.toString().contains('404')) {
-          setState(() {
-            profileImage = '';
-            _isLoading = false;
-          });
-        } else {
-          print(_isLoading);
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      });
-    } catch (e) {
-      setState(() {
-        profileImage = '';
-        _isLoading = false;
-      });
-    }*/
-
     once = false;
     super.didChangeDependencies();
   }
@@ -77,25 +56,22 @@ class _HasLoginState extends State<HasLogin> {
       _isLoading = true;
     });
     try {
-      final url =
-          'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/getUserInfos.php';
+      final url = 'http://161.35.10.255/agrisen-api/index.php/Profile/get_user';
       final response = await http.get(url, headers: {'api_key': apiKey});
 
       if (response != null) {
         final result = json.decode(response.body);
 
-        if (result['status'] == 200) {
-          final tempProfile = result['userInfos']['profile_image'];
-          setState(() {
-            userName = result['userInfos']['user_name'];
-            email = result['userInfos']['email'];
-            profileImage = tempProfile.toString().isEmpty
-                ? ''
-                : tempProfile.toString().startsWith('https://')
-                    ? tempProfile
-                    : 'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/ProfileImages/$tempProfile';
-          });
-        }
+        final tempProfile = result['profile_image'];
+        setState(() {
+          userName = result['user_name'];
+          email = result['email'];
+          profileImage = tempProfile.toString().isEmpty
+              ? ''
+              : tempProfile.toString().startsWith('https://')
+                  ? tempProfile
+                  : 'http://161.35.10.255/agrisen-api/uploads/profile_images/$tempProfile';
+        });
       }
       setState(() {
         _isLoading = false;
@@ -148,32 +124,52 @@ class _HasLoginState extends State<HasLogin> {
       _isLoading = true;
     });
 
+    var previousProfileImage = '';
+
+    if(!profileImage.startsWith('https://') && profileImage.isNotEmpty){
+      previousProfileImage = '/${profileImage.substring(profileImage.lastIndexOf('/') + 1)}';
+    }
+
     final url =
-        'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/updateProfileImage.php';
+        'http://161.35.10.255/agrisen-api/index.php/Upload/upload_profile${previousProfileImage}';
 
     final formData = FormData.fromMap(
         {'profile_image': await MultipartFile.fromFile(image.path)});
     await Dio()
         .post(url,
             options: Options(headers: {'api_key': apikey}), data: formData)
-        .then((onValue) {
-      if (onValue.data['status'] == 200) {
-        setState(() {
-          _isLoading = false;
-          profileImage =
-              'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/ProfileImages/${onValue.data['profile_image']}';
-        });
-        snakebar('your profile image was updated successfully');
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-        snakebar(onValue.data['message']);
+        .then((response) {
+          final result = json.decode(response.data);
+      if(result.toString().contains('<p>')){
+        var s = '';
+        s = result;
+        var f = s.substring(3, s.length - 4);
+        snakebar(f.contains('filetype') ? '$f Please enter a .png, .jpg of .jpeg image.' : f);
+      }else{
+        if(result){
+          setState(() {
+            _isLoading = false;
+            profileImage =
+            'http://161.35.10.255/agrisen-api/uploads/profile_images/${path.basename(image.path)}';
+          });
+          snakebar('your profile image was updated successfully');
+        } else if(result == '2'){
+          setState(() {
+            _isLoading = false;
+          });
+          snakebar('uploading profile image failed please try again');
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+          snakebar('uploading profile image failed please try again');
+        }
       }
     }).catchError((onError) {
       setState(() {
         _isLoading = false;
       });
+      snakebar('something went wrong please try again later.');
       print('er: $onError');
     });
   }
@@ -243,22 +239,28 @@ class _HasLoginState extends State<HasLogin> {
                                 Radius.circular(60),
                               ),
                             ),
-                            child: profileImage.isEmpty
-                                ? SvgPicture.network(
-                                    'http://192.168.43.150/Agrisen_app/assetImages/profileImage.svg',
+                            child: _isLoading ? 
+                            CircularProgressIndicator(
+                              backgroundColor: Colors.blue,
+                              strokeWidth: 1,
+                            ) :
+                             profileImage.isEmpty
+                                ? SvgPicture.asset(
+                                    'assets/SVGPics/profileImage.svg',
                                     width: 115,
                                   )
                                 : CachedNetworkImage(
+                                    fit: BoxFit.cover,
                                     imageUrl: profileImage,
                                     errorWidget: (context, str, obj) {
-                                      return SvgPicture.network(
-                                        'http://192.168.43.150/Agrisen_app/assetImages/profileImage.svg',
+                                      return SvgPicture.asset(
+                                        'assets/SVGPics/profileImage.svg',
                                         width: 115,
                                       );
                                     },
                                     placeholder: (context, str) {
-                                      return SvgPicture.network(
-                                        'http://192.168.43.150/Agrisen_app/assetImages/profileImage.svg',
+                                      return SvgPicture.asset(
+                                        'assets/SVGPics/profileImage.svg',
                                         width: 115,
                                       );
                                     },
@@ -271,7 +273,7 @@ class _HasLoginState extends State<HasLogin> {
                       ),
                       Expanded(
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Container(
                               width: double.infinity,
@@ -413,6 +415,7 @@ class NotificationTab extends StatefulWidget {
 
 class _NotificationTabState extends State<NotificationTab> {
   var dateTime = DateFormat('yMd').add_jms();
+
   @override
   Widget build(BuildContext context) {
     return Padding(

@@ -1,7 +1,5 @@
-import 'package:agrisen_app/Providers/loadArticles.dart';
 import 'package:agrisen_app/Providers/loadCommentedHelps.dart';
 import 'package:agrisen_app/Providers/loadComments.dart';
-import 'package:agrisen_app/Providers/loadCrops.dart';
 import 'package:agrisen_app/Providers/loadHelps.dart';
 import 'package:agrisen_app/imagesViewer.dart';
 import 'package:flutter/material.dart';
@@ -37,8 +35,6 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(value: LoadArticles()),
-        ChangeNotifierProvider.value(value: LoadCrops()),
         ChangeNotifierProvider.value(value: LoadHelps()),
         ChangeNotifierProvider.value(value: LoadComments()),
         ChangeNotifierProvider.value(value: LoadCommentedHelps()),

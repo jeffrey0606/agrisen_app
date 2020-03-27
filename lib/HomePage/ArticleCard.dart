@@ -45,25 +45,27 @@ class ArticleCard extends StatelessWidget {
                     bottomLeft: Radius.circular(15.0),
                   ),
                   child: Hero(
-                      tag: this.articleId,
-                      child: CachedNetworkImage(
-                        imageUrl: this.leadingImage,
-                        errorWidget: (ctx, str, obj) {
-                          return Image.asset(
-                            'assets/imageNotFoundOrange.png',
-                            fit: BoxFit.cover,
-                          );
-                        },
-                        placeholder: (str, obj) {
-                          return Center(
-                            child: CircularProgressIndicator(
-                              backgroundColor: Colors.lightBlue,
-                              strokeWidth: 1,
-                            ),
-                          );
-                        },
-                        fit: BoxFit.cover,
-                      )),
+                    tag: this.articleId,
+                    child: CachedNetworkImage(
+                      key: Key(this.articleId),
+                      imageUrl: this.leadingImage,
+                      errorWidget: (ctx, str, obj) {
+                        return Image.asset(
+                          'assets/imageNotFoundOrange.png',
+                          fit: BoxFit.cover,
+                        );
+                      },
+                      placeholder: (str, obj) {
+                        return Center(
+                          child: CircularProgressIndicator(
+                            backgroundColor: Colors.lightBlue,
+                            strokeWidth: 1,
+                          ),
+                        );
+                      },
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
               ),
             ),

@@ -29,31 +29,37 @@ class _HasNotLoginState extends State<HasNotLogin> {
       setState(() {
         _isSigingin = true;
       });
-      final userData = json.encode({
+      final userData = {
         'email': _email,
         'password': _password,
-      });
+      };
 
-      http.post('url', body: {'signin': userData}).then((response) async {
-        final data = json.decode(response.body);
-        final sharedPref = await SharedPreferences.getInstance();
-        final res = await sharedPref.setString(
-          'userInfos',
-          json.encode({
-            'api-key': data['api_key'],
-            'subscriber': 'emailAndPassword',
-          }),
-        );
-        if (res) {
+      http.post('http://161.35.10.255/agrisen-api/index.php/Profile/sign_in', body: userData).then((response) async {
+        if(response != null){
+          final sharedPref = await SharedPreferences.getInstance();
+          final res = await sharedPref.setString(
+            'userInfos',
+            json.encode({
+              'api-key': json.decode(response.body),
+              'subscriber': 'emailAndPassword',
+            }),
+          );
+          if (res) {
+            setState(() {
+              _isLogin = true;
+            });
+          }
+        } else {
           setState(() {
-            _isLogin = true;
+            _isSigingup = false;
           });
+          snakebar('User was not found please try again with the correct credentials.');
         }
       }).catchError((err) {
         setState(() {
           _isSigingup = false;
         });
-        print('errs: $err');
+        snakebar('Something when wrong please try again.');
       });
     }
   }
@@ -64,25 +70,32 @@ class _HasNotLoginState extends State<HasNotLogin> {
       setState(() {
         _isSigingup = true;
       });
-      final userData = json.encode({
+      final userData = {
         'user_name': _userName,
         'email': _email,
         'password': _password,
-      });
+      };
 
-      http.post('url', body: {'signup': userData}).then((response) async {
-        final data = json.decode(response.body);
-        final sharedPref = await SharedPreferences.getInstance();
-        final res = await sharedPref.setString(
-            'userInfos',
-            json.encode({
-              'api-key': data['api_key'],
-              'subscriber': 'emailAndPassword',
-            }));
-        if (res) {
+      http.post('http://161.35.10.255/agrisen-api/index.php/Profile/sign_up', body: userData).then((response) async {
+        if (response != null) {
+          final sharedPref = await SharedPreferences.getInstance();
+          final res = await sharedPref.setString(
+              'userInfos',
+              json.encode({
+                'api-key': json.decode(response.body),
+                'subscriber': 'emailAndPassword',
+              }));
+          if (res) {
+            setState(() {
+              _isLogin = true;
+            });
+          }
+        } else {
           setState(() {
-            _isLogin = true;
+            _isSigingup = false;
           });
+          snakebar(
+              'A user with this email already exits try with another please.');
         }
       }).catchError((err) {
         setState(() {
@@ -95,62 +108,43 @@ class _HasNotLoginState extends State<HasNotLogin> {
 
   Future _insertingGoogleFacebookUserToDb(
       String email, String name, String profile, String gORf) async {
-    try {
-      final userdata = json.encode(
-        {
-          "email": email,
-          "name": name,
-          "profile_image": profile,
-        },
-      );
-      final response = await http.post(
-        'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/googleAndFacebookSignin.php',
-        body: {'user_data': userdata},
-      );
-      if (response != null) {
-        final result = json.decode(response.body);
+  
+    final userdata = {
+      "email": email,
+      "user_name": name,
+      "profile_image": profile,
+    };
+    
+    await http.post('http://161.35.10.255/agrisen-api/index.php/Profile/sign_up', body: userdata).then((response) async{
+      if(response != null){
         final sharedPref = await SharedPreferences.getInstance();
-
-        setState(() {
-          _isSigningFacebook = false;
-          _isSigningGoogle = false;
-        });
-
-        if (result['status'] == 201) {
-          final res = await sharedPref.setString(
-              'userInfos',
-              json.encode({
-                'api-key': result['api_key'],
-                'subscriber': gORf,
-              }));
-          if (res) {
-            setState(() {
-              _isLogin = true;
-            });
-          }
-        } else if (result['status'] == 200) {
-          final res = await sharedPref.setString(
-              'userInfos',
-              json.encode({
-                'api-key': result['api_key'],
-                'subscriber': gORf,
-              }));
-          if (res) {
-            setState(() {
-              _isLogin = true;
-            });
-          }
+        final res = await sharedPref.setString(
+            'userInfos',
+            json.encode({
+              'api-key': json.decode(response.body),
+              'subscriber': gORf,
+            }));
+        if (res) {
+          setState(() {
+            _isSigningFacebook = false;
+            _isSigningGoogle = false;
+            _isLogin = true;
+          });
         } else {
+          setState(() {
+            _isSigningFacebook = false;
+            _isSigningGoogle = false;
+          });
           snakebar('something went wrong please try again!');
         }
       }
-    } catch (e) {
+    }).catchError((error){
       setState(() {
         _isSigningFacebook = false;
         _isSigningGoogle = false;
       });
       snakebar('something went wrong please try again!');
-    }
+    });
   }
 
   void _googleSignin() async {
@@ -160,7 +154,11 @@ class _HasNotLoginState extends State<HasNotLogin> {
 
     await Google.signin().then((userInfos) async {
       await _insertingGoogleFacebookUserToDb(
-          userInfos.email, userInfos.displayName, userInfos.photoUrl, 'google');
+        userInfos.email,
+        userInfos.displayName,
+        userInfos.photoUrl,
+        'google',
+      );
     }).catchError((onError) {
       snakebar('something went wrong please try again letter!');
       setState(() {
@@ -181,7 +179,11 @@ class _HasNotLoginState extends State<HasNotLogin> {
 
       if (value != false) {
         await _insertingGoogleFacebookUserToDb(
-            email, name, profileImage, 'facebook');
+          email,
+          name,
+          profileImage,
+          'facebook',
+        );
       }
     }).catchError((err) {
       snakebar('something went wrong please try again letter!');
@@ -242,7 +244,9 @@ class _HasNotLoginState extends State<HasNotLogin> {
     _passwordFocusNode.dispose();
     super.dispose();
   }
+
   final _globalKey = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -296,7 +300,11 @@ class _HasNotLoginState extends State<HasNotLogin> {
                                     FocusScope.of(context)
                                         .requestFocus(_emailFocusNode);
                                   },
-                                  onSaved: (value) {},
+                                  onSaved: (value) {
+                                    setState(() {
+                                      _userName = value;
+                                    });
+                                  },
                                   style: TextStyle(fontSize: 20),
                                   textInputAction: TextInputAction.next,
                                   decoration: InputDecoration(
@@ -323,7 +331,11 @@ class _HasNotLoginState extends State<HasNotLogin> {
                                   return null;
                                 },
                                 focusNode: _emailFocusNode,
-                                onSaved: (value) {},
+                                onSaved: (value) {
+                                  setState(() {
+                                    _email = value;
+                                  });
+                                },
                                 style: TextStyle(fontSize: 20),
                                 onFieldSubmitted: (_) {
                                   FocusScope.of(context)
@@ -350,7 +362,11 @@ class _HasNotLoginState extends State<HasNotLogin> {
                                   return null;
                                 },
                                 keyboardType: TextInputType.visiblePassword,
-                                onSaved: (value) {},
+                                onSaved: (value) {
+                                  setState(() {
+                                    _password = value;
+                                  });
+                                },
                                 focusNode: _passwordFocusNode,
                                 style: TextStyle(fontSize: 20),
                                 obscureText: _obscureText,

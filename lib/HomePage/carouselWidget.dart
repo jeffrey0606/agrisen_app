@@ -13,6 +13,7 @@ class CarouselWidget extends StatefulWidget {
 
 class _CarouselWidgetState extends State<CarouselWidget> {
   int _currentPageIndex = 0;
+  bool _err = false;
 
   @override
   Widget build(BuildContext context) {
@@ -46,13 +47,17 @@ class _CarouselWidgetState extends State<CarouselWidget> {
                           key: Key(item),
                           imageUrl: 'http://161.35.10.255/agrisen-api/carousel_images/$item',
                           errorWidget: (context, str, obj) {
-                            return Image.asset(
+                            _err = true;
+                            return Container();
+                          },
+                          placeholder: (context, str) {
+                            if(_err){
+                              return Image.asset(
                               'assets/imageNotAvailable.png',
                               fit: BoxFit.cover,
                               width: double.infinity,
                             );
-                          },
-                          placeholder: (context, str) {
+                            }
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               mainAxisAlignment: MainAxisAlignment.center,

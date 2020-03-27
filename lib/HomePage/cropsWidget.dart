@@ -3,7 +3,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 class CropWidget extends StatelessWidget {
   final List<dynamic> cropsList;
-  CropWidget({this.cropsList});
+  final Function prevent;
+  CropWidget({this.cropsList, this.prevent});
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -28,45 +30,52 @@ class CropWidget extends StatelessWidget {
           height: 150,
           margin: EdgeInsets.symmetric(horizontal: 1.5),
           child: Scrollbar(
-            child: ListView.separated(
-              itemCount: cropsList.length,
-              scrollDirection: Axis.horizontal,
-              separatorBuilder: (context, index) {
-                return VerticalDivider(
-                  endIndent: 50,
-                  indent: 30,
-                );
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (ScrollNotification){
+                if(ScrollNotification.metrics.axis == Axis.horizontal){
+                  this.prevent(true);
+                }
               },
-              itemBuilder: (context, index) {
-                return Column(
-                  children: <Widget>[
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(50),
-                      ),
-                      elevation: 2,
-                      child: CircleAvatar(
-                        child: SvgPicture.network(
-                          'http://161.35.10.255/agrisen-api/uploads/crops/${cropsList[index]['crop_image']}',
-                          width: 60,
+              child: ListView.separated(
+                itemCount: this.cropsList.length,
+                scrollDirection: Axis.horizontal,
+                separatorBuilder: (context, index) {
+                  return VerticalDivider(
+                    endIndent: 50,
+                    indent: 30,
+                  );
+                },
+                itemBuilder: (context, index) {
+                  return Column(
+                    children: <Widget>[
+                      Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50),
                         ),
-                        backgroundColor: Color.fromRGBO(237, 245, 252, 1.0),
-                        maxRadius: 50,
+                        elevation: 2,
+                        child: CircleAvatar(
+                          child: SvgPicture.network(
+                            'http://161.35.10.255/agrisen-api/uploads/crops/${this.cropsList[index]['crop_image']}',
+                            width: 60,
+                          ),
+                          backgroundColor: Color.fromRGBO(237, 245, 252, 1.0),
+                          maxRadius: 50,
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      height: 5,
-                    ),
-                    Text(
-                      '${cropsList[index]['crop_name']}',
-                      softWrap: true,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                );
-              },
+                      SizedBox(
+                        height: 5,
+                      ),
+                      Text(
+                        '${this.cropsList[index]['crop_name']}',
+                        softWrap: true,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),
