@@ -1,10 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:agrisen_app/ProfilePage/diseaseCheckedTab.dart';
+import 'package:agrisen_app/ProfilePage/notificationTab.dart';
+import 'package:agrisen_app/ProfilePage/questionsAskedTab.dart';
+import 'package:agrisen_app/Providers/userInfos.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 
@@ -20,68 +25,72 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:http/http.dart' as http;
 
 class HasLogin extends StatefulWidget {
+  final Function alert;
+  HasLogin({@required this.alert});
   @override
   _HasLoginState createState() => _HasLoginState();
 }
 
-class _HasLoginState extends State<HasLogin> {
-  bool _isLoading = true, once = true;
-  Directory directory;
+enum MenuItems {
+  settings,
+  logout,
+}
 
-  String userName = 'Username', email = 'Email', profileImage = '', apiKey = '';
+class _HasLoginState extends State<HasLogin> {
+  bool _isLoading = true;
+  Directory directory;
+  ScrollController _scrollController;
+
+  String apiKey = '';
+  double appBarHeight = AppBar().preferredSize.height * 4;
+  double offset = 0.0;
 
   @override
-  void didChangeDependencies() async {
-    if (once) {
-      final sharedPref = await SharedPreferences.getInstance();
+  void initState() {
+    // TODO: implement initState
+    _scrollController = ScrollController();
 
-      if (sharedPref.containsKey('userInfos')) {
-        final userinfos = json.decode(sharedPref.getString('userInfos'));
-        setState(() {
-          apiKey = userinfos['api-key'];
-        });
-      }
-
-      if (apiKey.isNotEmpty) {
-        await getUserInfos();
-      }
-    }
-
-    once = false;
-    super.didChangeDependencies();
+    _scrollController.addListener(_scrollListener);
+    super.initState();
   }
 
-  Future<void> getUserInfos() async {
+  _scrollListener() {
+    if (_scrollController.hasClients &&
+        _scrollController.offset < appBarHeight) {
+      setState(() {
+        offset = _scrollController.offset;
+      });
+    }
+  }
+
+  bool once = true;
+  @override
+  void didChangeDependencies() async {
+    super.didChangeDependencies();
     setState(() {
       _isLoading = true;
     });
-    try {
-      final url = 'http://161.35.10.255/agrisen-api/index.php/Profile/get_user';
-      final response = await http.get(url, headers: {'api_key': apiKey});
-
-      if (response != null) {
-        final result = json.decode(response.body);
-
-        final tempProfile = result['profile_image'];
+    if (once) {
+      final userProvider = Provider.of<UserInfos>(context);
+      if (userProvider.userInfos['user_id'] == null) {
+        print('object');
+        await userProvider.getUser().then((_) {
+          setState(() {
+            _isLoading = false;
+          });
+        }).catchError((onError) {
+          setState(() {
+            _isLoading = false;
+          });
+          print('er: $onError');
+        });
+      } else {
         setState(() {
-          userName = result['user_name'];
-          email = result['email'];
-          profileImage = tempProfile.toString().isEmpty
-              ? ''
-              : tempProfile.toString().startsWith('https://')
-                  ? tempProfile
-                  : 'http://161.35.10.255/agrisen-api/uploads/profile_images/$tempProfile';
+          _isLoading = false;
         });
       }
-      setState(() {
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      print('error: $e');
     }
+    once = false;
   }
 
   String reverseString(String string) {
@@ -91,7 +100,7 @@ class _HasLoginState extends State<HasLogin> {
     return temp;
   }
 
-  void getImage(ImageSource imageSource, {int key}) async {
+  void getImage(ImageSource imageSource, {int key, String profileImage}) async {
     final dir1 = await path_provider.getTemporaryDirectory();
 
     setState(() {
@@ -115,19 +124,20 @@ class _HasLoginState extends State<HasLogin> {
     );
 
     setState(() {
-      uploadProfileImage(result, apiKey);
+      uploadProfileImage(result, apiKey, profileImage);
     });
   }
 
-  void uploadProfileImage(File image, String apikey) async {
+  void uploadProfileImage(File image, String apikey, profileImage) async {
     setState(() {
       _isLoading = true;
     });
 
     var previousProfileImage = '';
 
-    if(!profileImage.startsWith('https://') && profileImage.isNotEmpty){
-      previousProfileImage = '/${profileImage.substring(profileImage.lastIndexOf('/') + 1)}';
+    if (!profileImage.startsWith('https://') && profileImage.isNotEmpty) {
+      previousProfileImage =
+          '/${profileImage.substring(profileImage.lastIndexOf('/') + 1)}';
     }
 
     final url =
@@ -139,21 +149,23 @@ class _HasLoginState extends State<HasLogin> {
         .post(url,
             options: Options(headers: {'api_key': apikey}), data: formData)
         .then((response) {
-          final result = json.decode(response.data);
-      if(result.toString().contains('<p>')){
+      final result = json.decode(response.data);
+      if (result.toString().contains('<p>')) {
         var s = '';
         s = result;
         var f = s.substring(3, s.length - 4);
-        snakebar(f.contains('filetype') ? '$f Please enter a .png, .jpg of .jpeg image.' : f);
-      }else{
-        if(result){
+        snakebar(f.contains('filetype')
+            ? '$f Please enter a .png, .jpg of .jpeg image.'
+            : f);
+      } else {
+        if (result) {
           setState(() {
             _isLoading = false;
             profileImage =
-            'http://161.35.10.255/agrisen-api/uploads/profile_images/${path.basename(image.path)}';
+                'http://161.35.10.255/agrisen-api/uploads/profile_images/${path.basename(image.path)}';
           });
           snakebar('your profile image was updated successfully');
-        } else if(result == '2'){
+        } else if (result == '2') {
           setState(() {
             _isLoading = false;
           });
@@ -205,398 +217,264 @@ class _HasLoginState extends State<HasLogin> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserInfos>(context);
+    final profileImage = userProvider.userInfos['profile_image'];
+    final email = userProvider.userInfos['email'];
+    final userId = userProvider.userInfos['user_id'];
+    final userName = userProvider.userInfos['user_name'];
+    final apiKey = userProvider.userInfos['api_key'];
+
     print(profileImage);
     return Scaffold(
       key: _globalKey,
-      body: DefaultTabController(
-        length: 2,
-        child: SingleChildScrollView(
-          child: Container(
-            height: MediaQuery.of(context).size.height - 56 / 3,
-            child: Column(
-              children: <Widget>[
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(10.0),
-                  child: Row(
-                    children: <Widget>[
-                      InkWell(
-                        onTap: () =>
-                            PickImage.galleryOrCameraPick(context, getImage),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(50),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(60),
-                          ),
-                          child: Container(
-                            width: 115,
-                            height: 115,
-                            decoration: BoxDecoration(
-                              color: Colors.blue,
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(60),
-                              ),
-                            ),
-                            child: _isLoading ? 
-                            CircularProgressIndicator(
-                              backgroundColor: Colors.blue,
-                              strokeWidth: 1,
-                            ) :
-                             profileImage.isEmpty
-                                ? SvgPicture.asset(
-                                    'assets/SVGPics/profileImage.svg',
-                                    width: 115,
-                                  )
-                                : CachedNetworkImage(
-                                    fit: BoxFit.cover,
-                                    imageUrl: profileImage,
-                                    errorWidget: (context, str, obj) {
-                                      return SvgPicture.asset(
-                                        'assets/SVGPics/profileImage.svg',
-                                        width: 115,
-                                      );
-                                    },
-                                    placeholder: (context, str) {
-                                      return SvgPicture.asset(
-                                        'assets/SVGPics/profileImage.svg',
-                                        width: 115,
-                                      );
-                                    },
-                                  ),
+      body: SafeArea(
+        child: DefaultTabController(
+          length: 3,
+          child: NestedScrollView(
+            controller: _scrollController,
+            headerSliverBuilder: (context, boxIsScrolled) {
+              return <Widget>[
+                SliverAppBar(
+                  actions: <Widget>[
+                    PopupMenuButton<MenuItems>(
+                      onSelected: (items) {
+                        switch (items) {
+                          case MenuItems.logout:
+                            widget.alert();
+                            break;
+                          case MenuItems.settings:
+                            break;
+                        }
+                      },
+                      itemBuilder: (BuildContext context) =>
+                          <PopupMenuEntry<MenuItems>>[
+                        const PopupMenuItem<MenuItems>(
+                          value: MenuItems.settings,
+                          child: ListTile(
+                            title: Text('Settings'),
+                            onTap: null,
+                            leading: Icon(Icons.settings),
                           ),
                         ),
-                      ),
-                      SizedBox(
-                        width: 15,
-                      ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Container(
-                              width: double.infinity,
-                              child: Text(
-                                userName,
-                                style: TextStyle(
-                                  color: Color.fromRGBO(10, 17, 40, 1.0),
-                                  fontSize: 18,
+                        const PopupMenuItem<MenuItems>(
+                          value: MenuItems.logout,
+                          child: ListTile(
+                            title: Text('Logout'),
+                            onTap: null,
+                            leading: Icon(Icons.exit_to_app),
+                          ),
+                        ),
+                      ],
+                    )
+                  ],
+                  forceElevated: true,
+                  floating: true,
+                  pinned: true,
+                  snap: true,
+                  elevation: 2,
+                  title: Text('Agrisen'),
+                  centerTitle: true,
+                  expandedHeight: appBarHeight,
+                  flexibleSpace: AnimatedCrossFade(
+                    //opacity: (appBarHeight - offset) / appBarHeight,
+                    //height: appBarHeight - (offset),
+                    crossFadeState: offset < 50.0
+                        ? CrossFadeState.showFirst
+                        : CrossFadeState.showSecond,
+                    firstCurve: Curves.easeIn,
+                    secondCurve: Curves.easeOut,
+                    duration: Duration(milliseconds: 100),
+                    secondChild: Container(),
+                    firstChild: Container(
+                      margin: EdgeInsets.only(
+                          top: AppBar().preferredSize.height - 18),
+                      child: Column(children: <Widget>[
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(10.0),
+                          child: Row(
+                            children: <Widget>[
+                              InkWell(
+                                onTap: () => PickImage.galleryOrCameraPick(
+                                  context,
+                                  getImage,
+                                  profileImage: profileImage
                                 ),
-                                textAlign: TextAlign.left,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(50),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(60),
+                                  ),
+                                  child: Container(
+                                    width: 115,
+                                    height: 115,
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue,
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(60),
+                                      ),
+                                    ),
+                                    child: _isLoading
+                                        ? Center(
+                                            child: CircularProgressIndicator(
+                                              backgroundColor: Colors.red,
+                                              strokeWidth: 3,
+                                            ),
+                                          )
+                                        : profileImage == null
+                                            ? SvgPicture.asset(
+                                                'assets/SVGPics/profileImage.svg',
+                                                width: 115,
+                                              )
+                                            : CachedNetworkImage(
+                                                fit: BoxFit.cover,
+                                                imageUrl: profileImage,
+                                                errorWidget:
+                                                    (context, str, obj) {
+                                                  return SvgPicture.asset(
+                                                    'assets/SVGPics/profileImage.svg',
+                                                    width: 115,
+                                                  );
+                                                },
+                                                placeholder: (context, str) {
+                                                  return SvgPicture.asset(
+                                                    'assets/SVGPics/profileImage.svg',
+                                                    width: 115,
+                                                  );
+                                                },
+                                              ),
+                                  ),
+                                ),
                               ),
+                              SizedBox(
+                                width: 15,
+                              ),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Container(
+                                      width: double.infinity,
+                                      child: Text(
+                                        userName == null ? 'Username' : userName,
+                                        style: TextStyle(
+                                          color:
+                                              Color.fromRGBO(10, 17, 40, 1.0),
+                                          fontSize: 18,
+                                        ),
+                                        textAlign: TextAlign.left,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: 15,
+                                    ),
+                                    Text(
+                                      email == null ? 'Email' : email,
+                                      textAlign: TextAlign.left,
+                                      style: TextStyle(
+                                        color: Color.fromRGBO(10, 17, 40, 1.0),
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                alignment: Alignment.topCenter,
+                                padding: EdgeInsets.only(bottom: 0),
+                                onPressed: () => null,
+                                icon: Icon(Icons.edit),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ]),
+                    ),
+                  ),
+                  bottom: TabBar(
+                    indicatorColor: Colors.blue,
+                    indicatorPadding: EdgeInsets.symmetric(horizontal: 70),
+                    labelStyle: TextStyle(
+                      fontSize: 20,
+                    ),
+                    labelColor: Colors.blue,
+                    unselectedLabelColor: Colors.black45,
+                    unselectedLabelStyle: TextStyle(
+                      fontSize: 16,
+                    ),
+                    isScrollable: true,
+                    tabs: <Widget>[
+                      Tab(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: <Widget>[
+                            Text('QuestionsAsked'),
+                          ],
+                        ),
+                      ),
+                      Tab(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: <Widget>[
+                            Text('Notifications'),
+                            SizedBox(
+                              width: 5,
                             ),
                             SizedBox(
-                              height: 15,
-                            ),
-                            Text(
-                              email,
-                              textAlign: TextAlign.left,
-                              style: TextStyle(
-                                color: Color.fromRGBO(10, 17, 40, 1.0),
-                                fontSize: 18,
+                              height: 20,
+                              child: Container(
+                                alignment: Alignment.center,
+                                padding: EdgeInsets.all(3),
+                                constraints: BoxConstraints(
+                                  minWidth: 20,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(
+                                    25,
+                                  ),
+                                ),
+                                child: FittedBox(
+                                  child: Text(
+                                    '3',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      IconButton(
-                        alignment: Alignment.topCenter,
-                        padding: EdgeInsets.only(bottom: 0),
-                        onPressed: () => null,
-                        icon: Icon(Icons.edit),
+                      Tab(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: <Widget>[
+                            Text('History'),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-                TabBar(
-                  indicatorColor: Colors.blue,
-                  indicatorPadding: EdgeInsets.symmetric(horizontal: 70),
-                  labelStyle: TextStyle(
-                    fontSize: 20,
-                  ),
-                  labelColor: Colors.blue,
-                  unselectedLabelColor: Colors.black45,
-                  unselectedLabelStyle: TextStyle(
-                    fontSize: 16,
-                  ),
-                  tabs: <Widget>[
-                    Tab(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: <Widget>[
-                          Text('Notifications'),
-                          SizedBox(
-                            height: 20,
-                            child: Container(
-                              alignment: Alignment.center,
-                              padding: EdgeInsets.all(3),
-                              constraints: BoxConstraints(
-                                minWidth: 20,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(
-                                  25,
-                                ),
-                              ),
-                              child: FittedBox(
-                                child: Text(
-                                  '3',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Tab(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: <Widget>[
-                          Text('History'),
-                          SizedBox(
-                            height: 20,
-                            child: Container(
-                              alignment: Alignment.center,
-                              padding: EdgeInsets.all(3),
-                              constraints: BoxConstraints(
-                                minWidth: 20,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(
-                                  25,
-                                ),
-                              ),
-                              child: FittedBox(
-                                child: Text(
-                                  '1',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+              ];
+            },
+            body: TabBarView(
+              children: <Widget>[
+                QuestionsAskedTab(
+                  apiKey: apiKey,
                 ),
-                Expanded(
-                  child: TabBarView(
-                    children: <Widget>[
-                      NotificationTab(),
-                      DiseaseCheckHistory(),
-                    ],
-                  ),
-                )
+                NotificationTab(),
+                DiseaseCheckedHistory(),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class NotificationTab extends StatefulWidget {
-  @override
-  _NotificationTabState createState() => _NotificationTabState();
-}
-
-class _NotificationTabState extends State<NotificationTab> {
-  var dateTime = DateFormat('yMd').add_jms();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 15.0),
-      child: ListView.separated(
-        separatorBuilder: (context, index) => SizedBox(
-          height: 15,
-        ),
-        itemCount: 3,
-        itemBuilder: (context, index) {
-          return ListTile(
-            onTap: () =>
-                Navigator.of(context).pushNamed(Notifications.nameRoute),
-            leading: CircleAvatar(
-              maxRadius: 30,
-            ),
-            title: Text(
-              'Message :',
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
-            ),
-            subtitle: Text(
-              'from :',
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class DiseaseCheckHistory extends StatefulWidget {
-  @override
-  _DiseaseCheckHistoryState createState() => _DiseaseCheckHistoryState();
-}
-
-class _DiseaseCheckHistoryState extends State<DiseaseCheckHistory> {
-  bool _showMore = false, _isAHistoryIsOpen = false;
-
-  int _currentIndex = 0;
-
-  var dateTime = DateFormat('yMd').add_jms().format(DateTime.now());
-
-  void _show(int index) {
-    setState(() {
-      if (_currentIndex == index) {
-        if (_showMore) {
-          _showMore = false;
-          _isAHistoryIsOpen = false;
-        } else {
-          _showMore = true;
-          _isAHistoryIsOpen = true;
-        }
-        _currentIndex = index;
-      } else {
-        if (_isAHistoryIsOpen) {
-          _showMore = false;
-          _showMore = true;
-          _isAHistoryIsOpen = false;
-        } else {
-          _showMore = true;
-          _isAHistoryIsOpen = true;
-        }
-        _currentIndex = index;
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: ListView.separated(
-        itemCount: 3,
-        separatorBuilder: (BuildContext context, int index) => Divider(
-          thickness: 2.0,
-        ),
-        itemBuilder: (context, index) {
-          return Column(
-            children: <Widget>[
-              if (index == 0)
-                Column(
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Text(
-                        'Disease Checked History',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(
-                          top: 8.0, right: 8.0, left: 8.0),
-                      child: Card(
-                        elevation: 5,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Container(
-                          height: 50,
-                          padding: EdgeInsets.symmetric(
-                              vertical: 8.0, horizontal: 25),
-                          decoration: BoxDecoration(
-                            color: Colors.greenAccent,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Text(
-                                'Total :',
-                                style: TextStyle(
-                                  color: Color.fromRGBO(10, 17, 40, 1.0),
-                                  fontSize: 18,
-                                ),
-                              ),
-                              Text(
-                                '3',
-                                style: TextStyle(
-                                  color: Color.fromRGBO(10, 17, 40, 1.0),
-                                  fontSize: 18,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              AnimatedContainer(
-                height: _currentIndex == index ? _showMore ? 100 : 50 : 50,
-                duration: Duration(milliseconds: 200),
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  width: double.infinity,
-                  child: Column(
-                    children: <Widget>[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Container(
-                            child: Text('Date : $dateTime'),
-                          ),
-                          FlatButton(
-                            onPressed: () => _show(index),
-                            child: Text(
-                              _currentIndex == index
-                                  ? _showMore ? 'see less' : 'see more'
-                                  : 'see more',
-                              style: TextStyle(
-                                color: Colors.blue,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (_showMore && _currentIndex == index)
-                        Expanded(
-                          child: Center(
-                            child: Text('Information from Transaction API.'),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              if (index == 2)
-                Divider(
-                  thickness: 2.0,
-                ),
-            ],
-          );
-        },
       ),
     );
   }

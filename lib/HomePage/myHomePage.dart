@@ -3,10 +3,12 @@ import 'dart:convert';
 import 'package:agrisen_app/HomePage/articlesWidget.dart';
 import 'package:agrisen_app/HomePage/carouselWidget.dart';
 import 'package:agrisen_app/HomePage/cropsWidget.dart';
+import 'package:agrisen_app/Providers/userInfos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 class Home extends StatefulWidget {
   final Function alert;
@@ -55,6 +57,19 @@ class _HomeState extends State<Home> {
     setState(() {
       _prevent = prevent;
     });
+  }
+
+  bool once = true;
+  @override
+  void didChangeDependencies() async {
+    super.didChangeDependencies();
+    if (once) {
+      final userProvider = Provider.of<UserInfos>(context);
+      if (userProvider.userInfos['user_id'] == null) {
+        await userProvider.getUser();
+      }
+    }
+    once = false;
   }
 
   @override
@@ -138,85 +153,83 @@ class _HomeState extends State<Home> {
           }
           return;
         },
-        child: Container(
-          child: SingleChildScrollView(
-            child: Column(
-              children: <Widget>[
-                FutureBuilder<dynamic>(
-                  future: _carouselImages,
-                  builder: (BuildContext buildContext,
-                      AsyncSnapshot<dynamic> snapshot) {
-                    switch (snapshot.connectionState) {
-                      case ConnectionState.waiting:
-                        return CarouselSkeletonWidget();
-                      case ConnectionState.done:
-                        if (snapshot.hasData) {
-                          http.Response data = snapshot.data;
-                          return CarouselWidget(
-                            carouselImages: json.decode(data.body),
-                          );
-                        } else if (snapshot.hasError) {
-                          print('custom err: ${snapshot.error}');
-                        }
-                        return Text('no data available');
-                      default:
-                        return CarouselSkeletonWidget();
-                    }
-                  },
-                ),
-                SizedBox(
-                  height: 15.0,
-                ),
-                FutureBuilder<dynamic>(
-                  future: _cropsData,
-                  builder: (BuildContext buildContext,
-                      AsyncSnapshot<dynamic> snapshot) {
-                    switch (snapshot.connectionState) {
-                      case ConnectionState.waiting:
-                        return CropSkeletonWidget();
-                      case ConnectionState.done:
-                        if (snapshot.hasData) {
-                          http.Response data = snapshot.data;
-                          return CropWidget(
-                            cropsList: json.decode(data.body),
-                            prevent: preventCropScroll,
-                          );
-                        } else if (snapshot.hasError) {
-                          print('custom err: ${snapshot.error}');
-                        }
-                        return Text('no data available');
-                      default:
-                        return Container();
-                    }
-                  },
-                ),
-                SizedBox(
-                  height: 10.0,
-                ),
-                FutureBuilder<dynamic>(
-                  future: _articleData,
-                  builder: (BuildContext buildContext,
-                      AsyncSnapshot<dynamic> snapshot) {
-                    switch (snapshot.connectionState) {
-                      case ConnectionState.waiting:
-                        return ArticlesSkeletonWidget();
-                      case ConnectionState.done:
-                        if (snapshot.hasData) {
-                          http.Response data = snapshot.data;
-                          return ArticlesWidget(
-                            articlesData: json.decode(data.body),
-                          );
-                        } else if (snapshot.hasError) {
-                          print('custom err: ${snapshot.error}');
-                        }
-                        return Text('no data available');
-                      default:
-                        return Container();
-                    }
-                  },
-                ),
-              ],
-            ),
+        child: SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              FutureBuilder<dynamic>(
+                future: _carouselImages,
+                builder: (BuildContext buildContext,
+                    AsyncSnapshot<dynamic> snapshot) {
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.waiting:
+                      return CarouselSkeletonWidget();
+                    case ConnectionState.done:
+                      if (snapshot.hasData) {
+                        http.Response data = snapshot.data;
+                        return CarouselWidget(
+                          carouselImages: json.decode(data.body),
+                        );
+                      } else if (snapshot.hasError) {
+                        print('custom err: ${snapshot.error}');
+                      }
+                      return Text('no data available');
+                    default:
+                      return CarouselSkeletonWidget();
+                  }
+                },
+              ),
+              SizedBox(
+                height: 15.0,
+              ),
+              FutureBuilder<dynamic>(
+                future: _cropsData,
+                builder: (BuildContext buildContext,
+                    AsyncSnapshot<dynamic> snapshot) {
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.waiting:
+                      return CropSkeletonWidget();
+                    case ConnectionState.done:
+                      if (snapshot.hasData) {
+                        http.Response data = snapshot.data;
+                        return CropWidget(
+                          cropsList: json.decode(data.body),
+                          prevent: preventCropScroll,
+                        );
+                      } else if (snapshot.hasError) {
+                        print('custom err: ${snapshot.error}');
+                      }
+                      return Text('no data available');
+                    default:
+                      return Container();
+                  }
+                },
+              ),
+              SizedBox(
+                height: 10.0,
+              ),
+              FutureBuilder<dynamic>(
+                future: _articleData,
+                builder: (BuildContext buildContext,
+                    AsyncSnapshot<dynamic> snapshot) {
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.waiting:
+                      return ArticlesSkeletonWidget();
+                    case ConnectionState.done:
+                      if (snapshot.hasData) {
+                        http.Response data = snapshot.data;
+                        return ArticlesWidget(
+                          articlesData: json.decode(data.body),
+                        );
+                      } else if (snapshot.hasError) {
+                        print('custom err: ${snapshot.error}');
+                      }
+                      return Text('no data available');
+                    default:
+                      return Container();
+                  }
+                },
+              ),
+            ],
           ),
         ),
       ),

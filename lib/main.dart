@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:agrisen_app/Providers/loadCommentedHelps.dart';
 import 'package:agrisen_app/Providers/loadComments.dart';
 import 'package:agrisen_app/Providers/loadHelps.dart';
+import 'package:agrisen_app/Providers/userInfos.dart';
 import 'package:agrisen_app/imagesViewer.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'PlantDiseaseDetection/diseaseDetectionPage.dart';
 import 'ProfilePage/notifications.dart';
@@ -11,7 +15,6 @@ import 'MainAppContainer.dart';
 import './HomePage/fullArticlePage.dart';
 import './Community/CommentingPage/commentingPage.dart';
 import './Community/AskCommunity/askCommunityForm.dart';
-
 
 void main() => runApp(MyApp());
 
@@ -35,6 +38,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider.value(value: UserInfos()),
         ChangeNotifierProvider.value(value: LoadHelps()),
         ChangeNotifierProvider.value(value: LoadComments()),
         ChangeNotifierProvider.value(value: LoadCommentedHelps()),
@@ -62,7 +66,7 @@ class _MyAppState extends State<MyApp> {
         home: MainAppContainer(),
         routes: {
           FullArticlePage.nameRoute: (ctx) => FullArticlePage(),
-          DiseaseDetectionPage.nameRoute : (ctx) => DiseaseDetectionPage(),
+          DiseaseDetectionPage.nameRoute: (ctx) => DiseaseDetectionPage(),
           Notifications.nameRoute: (ctx) => Notifications(),
           CommentingPage.routeName: (ctx) => CommentingPage(),
           AskCommunityForm.routeName: (ctx) => AskCommunityForm(),

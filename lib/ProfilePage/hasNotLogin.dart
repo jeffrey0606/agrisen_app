@@ -10,6 +10,8 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HasNotLogin extends StatefulWidget {
+  final Function alert;
+  HasNotLogin({@required this.alert});
   @override
   _HasNotLoginState createState() => _HasNotLoginState();
 }
@@ -250,11 +252,17 @@ class _HasNotLoginState extends State<HasNotLogin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: _isLogin == false ? AppBar(
+        title: Text('Agrisen'),
+        centerTitle: true,
+      ) : PreferredSize(preferredSize: Size(0, 0), child: Container(),),
       key: _globalKey,
       body: _isAScreenAvailable == false
           ? Container()
           : _isLogin != false
-              ? HasLogin()
+              ? HasLogin(
+                alert: widget.alert,
+              )
               : SingleChildScrollView(
                   scrollDirection: Axis.vertical,
                   child: Container(

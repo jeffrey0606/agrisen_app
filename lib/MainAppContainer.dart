@@ -4,6 +4,7 @@ import 'package:agrisen_app/Providers/facebook.dart';
 import 'package:agrisen_app/Providers/google.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'HomePage/myHomePage.dart';
@@ -11,6 +12,7 @@ import 'PlantDiseaseDetection/diseaseDetectionPage.dart';
 import 'ProfilePage/hasNotLogin.dart';
 import 'Community/community.dart';
 import './Community/AskCommunity/askCommunityForm.dart';
+import 'Providers/userInfos.dart';
 
 class MainAppContainer extends StatefulWidget {
   @override
@@ -29,6 +31,10 @@ class _MainAppContainerState extends State<MainAppContainer> {
   @override
   void didChangeDependencies() async {
     if (once) {
+      final userProvider = Provider.of<UserInfos>(context);
+      if (userProvider.userInfos['user_id'] == null) {
+        await userProvider.getUser();
+      }
       //await Provider.of<LoadHelps>(context).fetchHelps();
       //await Provider.of<LoadComments>(context, listen: false).fechComments();
     }
@@ -69,6 +75,7 @@ class _MainAppContainerState extends State<MainAppContainer> {
           globalKey, 'You haven\'t login to the app yet. you can do it here!');
     } else {
       final userinfos = json.decode(sharedPref.getString('userInfos'));
+      final clearUserInfos =  Provider.of<UserInfos>(context, listen: false);
 
       final subscriber = userinfos['subscriber'];
       if (subscriber == 'google') {
@@ -76,8 +83,8 @@ class _MainAppContainerState extends State<MainAppContainer> {
           snackBar(globalKey, onError);
         }).then((_) async {
           final res = await sharedPref.clear();
-
           if (res) {
+            await clearUserInfos.getUser();
             setState(() {
               if (_currentTab == 2) {
                 _currentTab = 0;
@@ -92,8 +99,9 @@ class _MainAppContainerState extends State<MainAppContainer> {
           snackBar(globalKey, onError);
         }).then((_) async {
           final res = await sharedPref.clear();
-
+          
           if (res) {
+            await clearUserInfos.getUser();
             setState(() {
               if (_currentTab == 2) {
                 _currentTab = 0;
@@ -105,8 +113,8 @@ class _MainAppContainerState extends State<MainAppContainer> {
         });
       } else if (subscriber == 'emailAndPassword') {
         final res = await sharedPref.clear();
-
         if (res) {
+          await clearUserInfos.getUser();
           setState(() {
             if (_currentTab == 2) {
               _currentTab = 0;
@@ -172,7 +180,7 @@ class _MainAppContainerState extends State<MainAppContainer> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _globalkey,
-      appBar: _currentTab == 1 || _currentTab == 0
+      appBar: _currentTab == 1 || _currentTab == 0 || _currentTab == 2
           ? null
           : AppBar(
               title: Text('Agrisen'),
@@ -222,7 +230,11 @@ class _MainAppContainerState extends State<MainAppContainer> {
               ? Community(
                   alert: alert,
                 )
-              : _currentTab == 2 ? HasNotLogin() : null,
+              : _currentTab == 2
+                  ? HasNotLogin(
+                      alert: alert,
+                    )
+                  : null,
       bottomNavigationBar: PhysicalModel(
         color: Colors.red,
         elevation: 50,
@@ -282,19 +294,20 @@ class _MainAppContainerState extends State<MainAppContainer> {
               key: UniqueKey(),
               transitionBuilder: (Widget child, Animation<double> animation) {
                 return FadeTransition(
-                  opacity:
-                      animation.drive(CurveTween(curve: Curves.ease)),
+                  opacity: animation.drive(CurveTween(curve: Curves.ease)),
                   child: child,
                 );
               },
               child: FloatingActionButton.extended(
-                onPressed: () async {
-                  final sharedPref = await SharedPreferences.getInstance();
-                  if (sharedPref.containsKey('userInfos')) {
-                    final userInfos =
-                        json.decode(sharedPref.getString('userInfos'));
-                    Navigator.pushNamed(context, AskCommunityForm.routeName,
-                        arguments: userInfos);
+                onPressed: () {
+                  final apiKey =
+                      Provider.of<UserInfos>(context, listen: false).userInfos['api_key'];
+                  if (apiKey != null) {
+                    Navigator.pushNamed(
+                      context,
+                      AskCommunityForm.routeName,
+                      arguments: {'api-key': apiKey},
+                    );
                   } else {
                     setState(() {
                       _currentTab = 2;

@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:agrisen_app/Providers/loadHelps.dart';
 import 'package:agrisen_app/imagesViewer.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart';
 import 'package:provider/provider.dart';
@@ -27,7 +28,7 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
   bool _isLoading = false;
   Directory directory;
 
-  void getImage(ImageSource imageSource, {int key}) async {
+  void getImage(ImageSource imageSource, {int key, String profileImage}) async {
     final dir1 = await path_provider.getTemporaryDirectory();
 
     setState(() {
@@ -36,27 +37,31 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
 
     File _image = await ImagePicker.pickImage(source: imageSource);
 
-    final reversed = reverseString(_image.absolute.path)
-        .replaceFirst(new RegExp(r'\w{0,10}[.]'), 'gpj.');
+    if (!_images.containsValue(basename(_image.path))) {
+      final reversed = reverseString(_image.absolute.path)
+          .replaceFirst(new RegExp(r'\w{0,10}[.]'), 'gpj.');
 
-    _image = File(reverseString(reversed));
+      _image = File(reverseString(reversed));
 
-    final random =
-        math.Random().nextInt(1000000).toString() + DateTime.now().toString();
+      final random =
+          math.Random().nextInt(1000000).toString() + DateTime.now().toString();
 
-    final targetPath =
-        dir1.absolute.path + '/$random' + '${basename(_image.path)}';
-    final result = await FlutterImageCompress.compressAndGetFile(
-      _image.absolute.path,
-      targetPath,
-      format: CompressFormat.jpeg,
-      quality: 50,
-    );
+      final targetPath =
+          dir1.absolute.path + '/$random' + '${basename(_image.path)}';
+      final result = await FlutterImageCompress.compressAndGetFile(
+        _image.absolute.path,
+        targetPath,
+        format: CompressFormat.jpeg,
+        quality: 50,
+      );
 
-    setState(() {
-      _images.update(key, (_) => result);
-      print('list of image directories: ${dir1.listSync()}');
-    });
+      setState(() {
+        _images.update(key, (_) => result);
+        print('list of image directories: ${dir1.listSync()}');
+      });
+    } else {
+      snakebar('Please enter another image this one already exists here.');
+    }
   }
 
   String reverseString(String string) {
@@ -102,13 +107,13 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
                 await MultipartFile.fromFile(_images[1].path,
                     filename: basename(_images[1].path)),
             ],
-            'askHelp':
-                json.encode({'crop_name': cropName, 'question': question}),
+            'crop_name': cropName,
+            'question': question,
           });
 
           await Dio()
               .post(
-            'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/askHelp.php',
+            'http://161.35.10.255/agrisen-api/index.php/Community/ask_help',
             data: formData,
             options: Options(
               headers: {
@@ -117,44 +122,46 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
             ),
           )
               .then((response) async {
-            final result = response.data;
+            final result = json.decode(response.data);
 
-            if (result['status'] == 200) {
-
-              await Provider.of<LoadHelps>(context, listen: false)
-                  .fetchHelps()
-                  .then((_) {
-                setState(() {
-                  _images = {
-                    1: null,
-                    2: null,
-                    3: null,
-                    4: null,
-                    5: null,
-                  };
-                  question = '';
-                  cropName = '';
-                  _isLoading = false;
-                });
+            if (result == null) {
+              setState(() {
+                _isLoading = false;
               });
+              snakebar('Your question failed to be uploaded.');
+            } else if (result) {
+              setState(() {
+                _images = {
+                  1: null,
+                  2: null,
+                  3: null,
+                  4: null,
+                  5: null,
+                };
+                question = '';
+                cropName = '';
+                _isLoading = false;
+              });
+              snakebar('You Question has been uploaded successfully.');
             } else {
               setState(() {
                 _isLoading = false;
               });
-              snakebar('This image already exist please change it');
+              snakebar(result);
             }
           }).catchError((err) {
             setState(() {
               _isLoading = false;
             });
             print('error: $err');
+            snakebar('Please check your internet connection!');
           });
         }
       } else {
         snakebar('Atleast 2 altenative images are required !');
       }
     } else {
-      snakebar('The Main Crop Image is required !');
+      snakebar('The Crop Cover Image is required !');
     }
   }
 
@@ -202,9 +209,6 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
   Widget build(BuildContext context) {
     final userInfos =
         ModalRoute.of(context).settings.arguments as Map<String, dynamic>;
-
-    final helps = Provider.of<LoadHelps>(context)
-        .getAllYourAskHelps(userInfos['api-key']);
 
     return Scaffold(
       key: _scaffoldKey,
@@ -332,45 +336,107 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
                       ],
                     ),
                     SizedBox(
-                      height: 10,
+                      height: 20,
                     ),
-                    SizedBox(
-                      width: double.infinity,
+                    Container(
+                      margin: EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        'Please add atleast 2 other images to be more precise thanks.',
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                    Container(
                       height: 200,
-                      child: GridView.count(
-                        crossAxisCount: 2,
-                        primary: false,
-                        padding: const EdgeInsets.all(20),
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
-                        childAspectRatio: 2 / 1,
-                        children: _images.entries.map((images) {
-                          return images.key == 5
-                              ? Container()
-                              : InkWell(
-                                  onTap: () {
-                                    PickImage.galleryOrCameraPick(
-                                      context,
-                                      getImage,
-                                      key: images.key,
-                                    );
-                                  },
-                                  child: Container(
-                                    color: Colors.blue,
-                                    child: images.value == null
-                                        ? Align(
-                                            alignment: Alignment.center,
-                                            child: Text(
-                                              'Add Image ${images.key}',
+                      width: double.infinity,
+                      child: CupertinoScrollbar(
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          children: _images.entries.map((images) {
+                            return images.key == 5
+                                ? Container()
+                                : Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Container(
+                                        height: 160,
+                                        color: Colors.blue,
+                                        width: 200,
+                                        margin: images.key == 1
+                                            ? EdgeInsets.only(left: 15)
+                                            : images.key == 4
+                                                ? EdgeInsets.only(right: 15)
+                                                : EdgeInsets.symmetric(
+                                                    horizontal: 15),
+                                        child: Stack(
+                                          children: <Widget>[
+                                            Center(
+                                              child: Text(
+                                                '${images.key}',
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 25,
+                                                ),
+                                              ),
                                             ),
-                                          )
-                                        : Image.file(
-                                            images.value,
-                                            fit: BoxFit.cover,
-                                          ),
-                                  ),
-                                );
-                        }).toList(),
+                                            if (images.value != null)
+                                              Image.file(
+                                                images.value,
+                                                fit: BoxFit.cover,
+                                                width: double.infinity,
+                                              ),
+                                            Positioned(
+                                              bottom: 0,
+                                              left: 0,
+                                              right: 0,
+                                              child: Container(
+                                                margin: EdgeInsets.symmetric(
+                                                  horizontal: 15,
+                                                ),
+                                                child: FlatButton(
+                                                  color: Color.fromRGBO(
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                  ),
+                                                  splashColor: Colors.white,
+                                                  shape: RoundedRectangleBorder(
+                                                    side: BorderSide(
+                                                      color: Colors.white,
+                                                      width: 1,
+                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    images.value == null
+                                                        ? 'add'
+                                                        : 'change',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                  onPressed: () {
+                                                    PickImage
+                                                        .galleryOrCameraPick(
+                                                      context,
+                                                      getImage,
+                                                      key: images.key,
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                          }).toList(),
+                        ),
                       ),
                     ),
                     Padding(
@@ -385,8 +451,8 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
                         validator: (value) {
                           if (value.isEmpty) {
                             return 'the question is required.';
-                          } else if (value.length > 200) {
-                            return 'the question should not be more than 200 characters.';
+                          } else if (value.length > 300) {
+                            return 'the question should not be more than 300 characters.';
                           }
                           return null;
                         },
@@ -397,7 +463,7 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
                         },
                         decoration: InputDecoration(
                           labelText: 'What\'s your Question',
-                          counterText: '$questionLenght/200',
+                          counterText: '$questionLenght/300',
                           labelStyle: TextStyle(
                             color: Colors.blue,
                           ),
@@ -439,11 +505,12 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
                           });
                         },
                         decoration: InputDecoration(
-                            labelText: 'Crop\'s name',
-                            labelStyle: TextStyle(
-                              color: Colors.blue,
-                            ),
-                            counterText: '$cropNamelenght/30'),
+                          labelText: 'Crop\'s name',
+                          labelStyle: TextStyle(
+                            color: Colors.blue,
+                          ),
+                          counterText: '$cropNamelenght/30',
+                        ),
                         toolbarOptions: ToolbarOptions(
                           copy: true,
                           cut: true,
@@ -457,79 +524,8 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
                       ),
                     ),
                     SizedBox(
-                      height: 30,
+                      height: 15,
                     ),
-                    if (helps != [])
-                      ...helps.map((help) {
-                        final index = helps.indexOf(help);
-                        final images = json.decode(help['crop_images']);
-                        return Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            children: <Widget>[
-                              if (index == 0)
-                                Column(
-                                  children: <Widget>[
-                                    Text(
-                                      helps != []
-                                          ? '${helps[0]['user_name']} below is the list of the helps you asked the Community'
-                                          : '',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          decoration: TextDecoration.underline),
-                                    ),
-                                    SizedBox(
-                                      height: 30,
-                                    ),
-                                  ],
-                                ),
-                              ListTile(
-                                leading: InkWell(
-                                  onTap: () => Navigator.of(context).pushNamed(
-                                      ImagesViewer.namedRoute,
-                                      arguments: {
-                                        'from': 'network',
-                                        'images': images
-                                      }),
-                                  child: Image.network(
-                                    'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/AskHelpImages/${images[0]}',
-                                    fit: BoxFit.cover,
-                                    width: 90,
-                                  ),
-                                ),
-                                title: Text(
-                                  help['question'].endsWith('?')
-                                      ? help['question']
-                                      : '${help['question']} ?',
-                                  maxLines: 3,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                subtitle: Text(help['crop_name']),
-                                trailing: FittedBox(
-                                  child: Column(
-                                    children: <Widget>[
-                                      IconButton(
-                                        icon: Icon(Icons.delete),
-                                        color: Colors.red,
-                                        onPressed: () => null,
-                                      ),
-                                      Text(
-                                        'delete',
-                                        style: TextStyle(
-                                          color: Colors.red,
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Divider()
-                            ],
-                          ),
-                        );
-                      }).toList()
                   ],
                 ),
               ),
