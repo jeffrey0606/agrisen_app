@@ -32,17 +32,17 @@ class _HomeState extends State<Home> {
 
   _getCarouselImages() async {
     return await http.get(
-        'http://161.35.10.255/agrisen-api/index.php/Home/fetch_carousel_images');
+        'http://192.168.43.150/agrisen-api/index.php/Home/fetch_carousel_images');
   }
 
   _getCrops() async {
     return await http
-        .get('http://161.35.10.255/agrisen-api/index.php/Home/fetch_crops');
+        .get('http://192.168.43.150/agrisen-api/index.php/Home/fetch_crops');
   }
 
   _getArticles() async {
     return await http
-        .get('http://161.35.10.255/agrisen-api/index.php/Home/fetch_articles');
+        .get('http://192.168.43.150/agrisen-api/index.php/Home/fetch_articles');
   }
 
   changeItemView(bool show) {
@@ -156,7 +156,7 @@ class _HomeState extends State<Home> {
         child: SingleChildScrollView(
           child: Column(
             children: <Widget>[
-              FutureBuilder<dynamic>(
+              /*FutureBuilder<dynamic>(
                 future: _carouselImages,
                 builder: (BuildContext buildContext,
                     AsyncSnapshot<dynamic> snapshot) {
@@ -177,7 +177,7 @@ class _HomeState extends State<Home> {
                       return CarouselSkeletonWidget();
                   }
                 },
-              ),
+              ),*/
               SizedBox(
                 height: 15.0,
               ),

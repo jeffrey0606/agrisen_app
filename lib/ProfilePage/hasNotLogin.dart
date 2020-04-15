@@ -1,17 +1,20 @@
 import 'package:agrisen_app/ProfilePage/hasLogin.dart';
 import 'package:agrisen_app/Providers/facebook.dart';
 import 'package:agrisen_app/Providers/google.dart';
+import 'package:agrisen_app/Providers/userInfos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HasNotLogin extends StatefulWidget {
   final Function alert;
-  HasNotLogin({@required this.alert});
+  final GlobalKey<ScaffoldState> globalKey;
+  HasNotLogin({@required this.alert, @required this.globalKey});
   @override
   _HasNotLoginState createState() => _HasNotLoginState();
 }
@@ -36,30 +39,45 @@ class _HasNotLoginState extends State<HasNotLogin> {
         'password': _password,
       };
 
-      http.post('http://161.35.10.255/agrisen-api/index.php/Profile/sign_in', body: userData).then((response) async {
-        if(response != null){
-          final sharedPref = await SharedPreferences.getInstance();
-          final res = await sharedPref.setString(
-            'userInfos',
-            json.encode({
-              'api-key': json.decode(response.body),
-              'subscriber': 'emailAndPassword',
-            }),
-          );
-          if (res) {
+      http
+          .post('http://192.168.43.150/agrisen-api/index.php/Profile/sign_in',
+              body: userData)
+          .then((response) async {
+        if (response != null) {
+          final result = json.decode(response.body);
+          print('object: $result');
+          if (result != null) {
+            final sharedPref = await SharedPreferences.getInstance();
+            final res = await sharedPref.setString(
+              'userInfos',
+              json.encode({
+                'api-key': result,
+                'subscriber': 'emailAndPassword',
+              }),
+            );
+            if (res) {
+              setState(() {
+                _isLogin = true;
+              });
+            } else {
+              print('shared');
+            }
+          } else {
             setState(() {
-              _isLogin = true;
+              _isSigingin = false;
             });
+            snakebar(
+                'User was not found please try again with the correct credentials.');
           }
         } else {
           setState(() {
-            _isSigingup = false;
+            _isSigingin = false;
           });
-          snakebar('User was not found please try again with the correct credentials.');
+          snakebar('Something went wrong please try again later.');
         }
       }).catchError((err) {
         setState(() {
-          _isSigingup = false;
+          _isSigingin = false;
         });
         snakebar('Something when wrong please try again.');
       });
@@ -78,26 +96,42 @@ class _HasNotLoginState extends State<HasNotLogin> {
         'password': _password,
       };
 
-      http.post('http://161.35.10.255/agrisen-api/index.php/Profile/sign_up', body: userData).then((response) async {
+      http
+          .post('http://192.168.43.150/agrisen-api/index.php/Profile/sign_up',
+              body: userData)
+          .then((response) async {
         if (response != null) {
-          final sharedPref = await SharedPreferences.getInstance();
-          final res = await sharedPref.setString(
-              'userInfos',
-              json.encode({
-                'api-key': json.decode(response.body),
-                'subscriber': 'emailAndPassword',
-              }));
-          if (res) {
+          final result = json.decode(response.body);
+
+          if (result == null) {
             setState(() {
-              _isLogin = true;
+              _isSigingup = false;
             });
+            snakebar(
+                'A user with this email already exits try with another please.');
+          } else if (result == false) {
+            setState(() {
+              _isSigingup = false;
+            });
+            snakebar(
+                'Something went wrong please try again. A verification mail could not be send to your address.');
+          } else {
+            final sharedPref = await SharedPreferences.getInstance();
+            final res = await sharedPref.setString(
+              'userInfos',
+              json.encode(
+                {
+                  'api-key': json.decode(response.body),
+                  'subscriber': 'emailAndPassword',
+                },
+              ),
+            );
+            if (res) {
+              setState(() {
+                _isLogin = true;
+              });
+            }
           }
-        } else {
-          setState(() {
-            _isSigingup = false;
-          });
-          snakebar(
-              'A user with this email already exits try with another please.');
         }
       }).catchError((err) {
         setState(() {
@@ -110,15 +144,17 @@ class _HasNotLoginState extends State<HasNotLogin> {
 
   Future _insertingGoogleFacebookUserToDb(
       String email, String name, String profile, String gORf) async {
-  
     final userdata = {
       "email": email,
       "user_name": name,
       "profile_image": profile,
     };
-    
-    await http.post('http://161.35.10.255/agrisen-api/index.php/Profile/sign_up', body: userdata).then((response) async{
-      if(response != null){
+
+    await http
+        .post('http://192.168.43.150/agrisen-api/index.php/Profile/sign_up',
+            body: userdata)
+        .then((response) async {
+      if (response != null) {
         final sharedPref = await SharedPreferences.getInstance();
         final res = await sharedPref.setString(
             'userInfos',
@@ -140,7 +176,7 @@ class _HasNotLoginState extends State<HasNotLogin> {
           snakebar('something went wrong please try again!');
         }
       }
-    }).catchError((error){
+    }).catchError((error) {
       setState(() {
         _isSigningFacebook = false;
         _isSigningGoogle = false;
@@ -252,17 +288,23 @@ class _HasNotLoginState extends State<HasNotLogin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _isLogin == false ? AppBar(
-        title: Text('Agrisen'),
-        centerTitle: true,
-      ) : PreferredSize(preferredSize: Size(0, 0), child: Container(),),
+      appBar: _isLogin == false
+          ? AppBar(
+              title: Text('Agrisen'),
+              centerTitle: true,
+            )
+          : PreferredSize(
+              preferredSize: Size(0, 0),
+              child: Container(),
+            ),
       key: _globalKey,
       body: _isAScreenAvailable == false
           ? Container()
           : _isLogin != false
               ? HasLogin(
-                alert: widget.alert,
-              )
+                  alert: widget.alert,
+                  globalKey: widget.globalKey,
+                )
               : SingleChildScrollView(
                   scrollDirection: Axis.vertical,
                   child: Container(
@@ -424,8 +466,9 @@ class _HasNotLoginState extends State<HasNotLogin> {
                         ),
                         _signup
                             ? FloatingActionButton.extended(
-                                backgroundColor:
-                                    Color.fromRGBO(10, 17, 40, 1.0),
+                                backgroundColor: _isSigingup
+                                    ? Color.fromRGBO(10, 17, 40, 0.4)
+                                    : Color.fromRGBO(10, 17, 40, 1.0),
                                 label: _isSigingup
                                     ? CircularProgressIndicator(
                                         backgroundColor: Colors.blue,
@@ -443,11 +486,16 @@ class _HasNotLoginState extends State<HasNotLogin> {
                                   Icons.exit_to_app,
                                   color: Color.fromRGBO(237, 245, 252, 1.0),
                                 ),
-                                onPressed: () => _signupWithEmailPassword(),
+                                elevation: _isSigingup ? 0 : 8,
+                                onPressed: _isSigingup
+                                    ? null
+                                    : () => _signupWithEmailPassword(),
                               )
                             : FloatingActionButton.extended(
-                                backgroundColor:
-                                    Color.fromRGBO(10, 17, 40, 1.0),
+                                elevation: _isSigingin ? 0 : 8,
+                                backgroundColor: _isSigingin
+                                    ? Color.fromRGBO(10, 17, 40, 0.4)
+                                    : Color.fromRGBO(10, 17, 40, 1.0),
                                 label: _isSigingin
                                     ? CircularProgressIndicator(
                                         backgroundColor: Colors.blue,
@@ -469,7 +517,9 @@ class _HasNotLoginState extends State<HasNotLogin> {
                                   Icons.exit_to_app,
                                   color: Color.fromRGBO(237, 245, 252, 1.0),
                                 ),
-                                onPressed: () => _signinWithEmailPassword(),
+                                onPressed: _isSigingin
+                                    ? null
+                                    : () => _signinWithEmailPassword(),
                               ),
                         SizedBox(
                           height: 20,
@@ -506,7 +556,7 @@ class _HasNotLoginState extends State<HasNotLogin> {
                           child: Row(
                             children: <Widget>[
                               FloatingActionButton.extended(
-                                elevation: 3,
+                                elevation: _isSigningGoogle ? 0 : 3,
                                 label: _isSigningGoogle
                                     ? CircularProgressIndicator(
                                         backgroundColor: Colors.blue,
@@ -524,13 +574,15 @@ class _HasNotLoginState extends State<HasNotLogin> {
                                   'assets/SVGPics/google.svg',
                                   height: 30,
                                 ),
-                                onPressed: () => _googleSignin(),
+                                onPressed: _isSigningGoogle
+                                    ? null
+                                    : () => _googleSignin(),
                               ),
                               SizedBox(
                                 width: 20,
                               ),
                               FloatingActionButton.extended(
-                                elevation: 3,
+                                elevation: _isSigningFacebook ? 0 : 3,
                                 label: _isSigningFacebook
                                     ? CircularProgressIndicator(
                                         backgroundColor: Colors.blue,
@@ -548,7 +600,9 @@ class _HasNotLoginState extends State<HasNotLogin> {
                                   'assets/SVGPics/facebook.svg',
                                   height: 30,
                                 ),
-                                onPressed: () => _facebookSignin(),
+                                onPressed: _isSigningFacebook
+                                    ? null
+                                    : () => _facebookSignin(),
                               )
                             ],
                           ),

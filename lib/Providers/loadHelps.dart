@@ -12,25 +12,35 @@ class LoadHelps extends ChangeNotifier {
 
   Future<void> fetchHelps() async {
     try {
+      final last_timestamp = _helpsData.isNotEmpty
+          ? '?last_timestamp=${_helpsData[0]['timestamp']}'
+          : '';
       final url =
-          'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/fetchHelps.php';
+          'http://192.168.43.150/agrisen-api/index.php/Community/fetch_helps$last_timestamp';
       final response = await http.get(url);
 
       if (response != null) {
-        final result = json.decode(response.body);
-        
-        if ((result['status']) == 200) {
-          _helpsData = result['helpsData'];
-          //print('article : ${result['articlesData'][4]['article']}');
+        final result = json.decode(response.body) as List<dynamic>;
 
-          /*final article = result['articlesData'][4]['article'].toString().split('\"');
-          final coverImageLink = article.firstWhere((test) => test.trim().contains('http'));
-          print('article $article');
-          print('link: $coverImageLink');*/
+        if (result != null) {
+          if (last_timestamp == '') {
+            if (result.isNotEmpty) {
+              print('result: $result');
+              _helpsData = result;
+            } else {
+              print('object');
+              _helpsData = ['a'];
+            }
+          } else {
+            print('result1: $result');
+            for (int i = 0; i < result.length; i++) {
+              _helpsData.insert(i, _helpsData[i]);
+            }
+          }
         }
       }
+      notifyListeners();
     } catch (err) {
-      print('err : $err');
       throw err;
     }
     notifyListeners();
@@ -40,7 +50,7 @@ class LoadHelps extends ChangeNotifier {
     return _helpsData.firstWhere((test) => test['askHelp_id'] == helpId);
   }
 
-  List<dynamic> getAllYourAskHelps(String apiKey){
-    return _helpsData.where((test) => test['api_key'] == apiKey).toList();
+  List<dynamic> getAllYourAskHelps(String userId) {
+    return _helpsData.where((test) => test['user_id'] == userId).toList();
   }
 }

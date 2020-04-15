@@ -55,7 +55,7 @@ class CropWidget extends StatelessWidget {
                         elevation: 2,
                         child: CircleAvatar(
                           child: SvgPicture.network(
-                            'http://161.35.10.255/agrisen-api/uploads/crops/${this.cropsList[index]['crop_image']}',
+                            'http://192.168.43.150/agrisen-api/uploads/crops/${this.cropsList[index]['crop_image']}',
                             width: 60,
                           ),
                           backgroundColor: Color.fromRGBO(237, 245, 252, 1.0),

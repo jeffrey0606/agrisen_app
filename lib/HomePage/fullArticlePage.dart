@@ -80,7 +80,7 @@ class _FullArticlePageState extends State<FullArticlePage> {
 
   _getArticle(int articleId) async {
     return await http.get(
-        'http://161.35.10.255/agrisen-api/index.php/Home/fetch_articles/$articleId');
+        'http://192.168.43.150/agrisen-api/index.php/Home/fetch_articles/$articleId');
   }
 
   bool _once = true;

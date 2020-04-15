@@ -7,6 +7,7 @@ import 'package:agrisen_app/imagesViewer.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:path/path.dart';
 import 'package:provider/provider.dart';
 
@@ -29,39 +30,19 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
   Directory directory;
 
   void getImage(ImageSource imageSource, {int key, String profileImage}) async {
-    final dir1 = await path_provider.getTemporaryDirectory();
-
-    setState(() {
-      directory = dir1;
-    });
-
     File _image = await ImagePicker.pickImage(source: imageSource);
 
-    if (!_images.containsValue(basename(_image.path))) {
-      final reversed = reverseString(_image.absolute.path)
-          .replaceFirst(new RegExp(r'\w{0,10}[.]'), 'gpj.');
+    final properties = await FlutterNativeImage.getImageProperties(_image.path);
+    final result = await FlutterNativeImage.compressImage(
+      _image.path,
+      quality: 70,
+      targetHeight: properties.height,
+      targetWidth: properties.width,
+    );
 
-      _image = File(reverseString(reversed));
-
-      final random =
-          math.Random().nextInt(1000000).toString() + DateTime.now().toString();
-
-      final targetPath =
-          dir1.absolute.path + '/$random' + '${basename(_image.path)}';
-      final result = await FlutterImageCompress.compressAndGetFile(
-        _image.absolute.path,
-        targetPath,
-        format: CompressFormat.jpeg,
-        quality: 50,
-      );
-
-      setState(() {
-        _images.update(key, (_) => result);
-        print('list of image directories: ${dir1.listSync()}');
-      });
-    } else {
-      snakebar('Please enter another image this one already exists here.');
-    }
+    setState(() {
+      _images.update(key, (_) => result);
+    });
   }
 
   String reverseString(String string) {
@@ -113,7 +94,7 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
 
           await Dio()
               .post(
-            'http://161.35.10.255/agrisen-api/index.php/Community/ask_help',
+            'http://192.168.43.150/agrisen-api/index.php/Community/ask_help',
             data: formData,
             options: Options(
               headers: {
@@ -388,6 +369,7 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
                                                 images.value,
                                                 fit: BoxFit.cover,
                                                 width: double.infinity,
+                                                height: double.infinity,
                                               ),
                                             Positioned(
                                               bottom: 0,

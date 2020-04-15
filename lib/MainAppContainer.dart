@@ -233,6 +233,7 @@ class _MainAppContainerState extends State<MainAppContainer> {
               : _currentTab == 2
                   ? HasNotLogin(
                       alert: alert,
+                      globalKey: _globalkey,
                     )
                   : null,
       bottomNavigationBar: PhysicalModel(
@@ -288,7 +289,10 @@ class _MainAppContainerState extends State<MainAppContainer> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: _currentTab == 1
+      floatingActionButton: 
+      _currentTab == 2 ? null
+      :
+      _currentTab == 1
           ? AnimatedSwitcher(
               duration: Duration(milliseconds: 200),
               key: UniqueKey(),

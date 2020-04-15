@@ -16,7 +16,7 @@ class ArticlesWidget extends StatelessWidget {
           width: double.infinity,
           padding: EdgeInsets.symmetric(horizontal: 12),
           child: Text(
-            'Learn how to plant crops articles.',
+            'Learn how to plant crops with our articles.',
             softWrap: true,
             style: TextStyle(
               color: Colors.blue, //Color.fromRGBO(10, 17, 40, 1.0),

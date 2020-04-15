@@ -45,7 +45,7 @@ class _CarouselWidgetState extends State<CarouselWidget> {
                       builder: (context) {
                         return CachedNetworkImage(
                           key: Key(item),
-                          imageUrl: 'http://161.35.10.255/agrisen-api/carousel_images/$item',
+                          imageUrl: 'http://192.168.43.150/agrisen-api/carousel_images/$item',
                           errorWidget: (context, str, obj) {
                             _err = true;
                             return Container();

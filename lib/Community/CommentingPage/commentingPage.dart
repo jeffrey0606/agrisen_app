@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:agrisen_app/Providers/loadCommentedHelps.dart';
 import 'package:agrisen_app/Providers/loadComments.dart';
+import 'package:agrisen_app/Providers/userInfos.dart';
 import 'package:agrisen_app/timeAjuster.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -32,6 +34,8 @@ class _CommentingPageState extends State<CommentingPage> {
   void initState() {
     super.initState();
 
+    fetchComments();
+
     KeyboardVisibilityNotification().addNewListener(onChange: (visible) {
       if (visible) {
         FocusScope.of(context).requestFocus(_commentFocusNode);
@@ -41,30 +45,49 @@ class _CommentingPageState extends State<CommentingPage> {
     });
   }
 
+  fetchComments() {
+    Timer.periodic(Duration(seconds: 5), (timer) async {
+      if (mounted && askHelpId != '') {
+        await Provider.of<LoadComments>(context, listen: false)
+            .fechComments(askHelpId);
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
   var tagName = '';
   List<String> tags = [];
   String _parentCommentId = null;
+  var user_id = '';
+  var _hasCommented = false;
 
   @override
   void didChangeDependencies() async {
     super.didChangeDependencies();
 
-    await Provider.of<LoadComments>(context).fechComments();
     if (once) {
-      final sharedPref = await SharedPreferences.getInstance();
-
-      if (sharedPref.containsKey('userInfos')) {
-        final userinfos = json.decode(sharedPref.getString('userInfos'));
-        setState(() {
-          api_key = userinfos['api-key'];
-          _isLoggin = true;
+      final userInfos =
+          Provider.of<UserInfos>(context, listen: false).userInfos;
+      setState(() {
+        api_key = userInfos['api_key'];
+        user_id = userInfos['user_id'];
+        askHelpId = ModalRoute.of(context).settings.arguments as String;
+        ;
+        once = false;
+      });
+      if (userInfos['user_id'] != null && askHelpId != '') {
+        await http
+            .get(
+                'http://192.168.43.150/agrisen-api/index.php/Community/has_commented?askHelp_id=${int.parse(askHelpId)}&user_id=${int.parse(user_id)}')
+            .then((_) {
+              print('has commented: ${json.decode(_.body)}');
+          setState(() {
+            _hasCommented = json.decode(_.body);
+          });
         });
-      } else {
-        snakebar(
-            'You haven\'t login to the app yet. you can do it at profile page!');
       }
     }
-    once = false;
   }
 
   snakebar(String message) {
@@ -121,108 +144,92 @@ class _CommentingPageState extends State<CommentingPage> {
     });
   }
 
-  Future<int> updateLastTimeViewed(String apiKey, String askHelpId) async {
-    try {
-      final response = await http.post(
-        'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/commentedHelps.php',
-        body: {
-          'askHelp_id': askHelpId,
-        },
-        headers: {
-          'api_key': api_key,
-        },
-      );
-      final result = json.decode(response.body);
-      if (result['status'] == 200) {
-        return 200;
-      }
-    } catch (e) {
-      print('e: $e');
-    }
-  }
-
   @override
   void dispose() async {
     super.dispose();
+    if (_hasCommented) {
+      final _url =
+          'http://192.168.43.150/agrisen-api/index.php/Community/insert_or_update_commented_helps';
+      await http.post(_url, body: {
+        'askHelp_id': askHelpId,
+      }, headers: {
+        'api_key': api_key
+      }).then((_) {
+        tags = [];
+      }).catchError((onError) {
+        print('object: $onError');
+      });
+    }
     _commentFocusNode.dispose();
     commentText.dispose();
   }
 
   Future<void> sendComment(
-      String askHelpId, List<String> tags, String parentCommentId) async {
+      String askHelpId,
+      List<String> tags,
+      String parentCommentId,
+      String cropName,
+      String images,
+      String question) async {
     try {
-      final url = 'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/';
+      final url =
+          'http://192.168.43.150/agrisen-api/index.php/Community/comment';
 
-      final response = await http.post('$url' + 'comment.php', body: {
-        'commentData': json.encode({
-          'askHelp_id': askHelpId,
-          'parent_comment_id': parentCommentId,
-          'comment': commentText.text,
-        })
+      final tag = tags.isNotEmpty ? json.encode(tags) : json.encode(null);
+
+      final response = await http.post(url, body: {
+        'askHelp_id': askHelpId,
+        'parent_comment_id': json.encode(parentCommentId),
+        'comment': commentText.text,
+        'tags': tag
       }, headers: {
         'api_key': api_key
       });
 
       if (response != null) {
-        final result = json.decode(response.body);
+        final result = response.body.toString().isEmpty
+            ? false
+            : json.decode(response.body);
 
-        if (result['status'] == 200) {
-          final response =
-              await http.post('$url' + 'commentedHelps.php', body: {
+        if (result) {
+          final _url =
+              'http://192.168.43.150/agrisen-api/index.php/Community/insert_or_update_commented_helps';
+          await http.post(_url, body: {
             'askHelp_id': askHelpId,
           }, headers: {
             'api_key': api_key
-          });
-
-          if (response != null) {
-            final result = json.decode(response.body);
-
-            if (result['status'] == 200) {
-              setState(() {
-                commentText.text = '';
-                _isReplying = false;
-              });
-              await Provider.of<LoadComments>(context, listen: false)
-                  .fechComments();
-              await Provider.of<LoadCommentedHelps>(context, listen: false)
-                  .fechCommentedHelps(api_key);
-            }
-          }
-          if (tags.isNotEmpty) {
-            final response = await http.post('$url' + 'tag.php', body: {
-              'tags': json.encode(tags),
-              'comment_id': result['comment_id'].toString(),
-            }, headers: {
-              'api_key': api_key
-            });
-
-            if (response != null) {
-              final result = json.decode(response.body);
-
-              if (result['status'] == 200) {
-                setState(() {
-                  commentText.text = '';
-                  _isReplying = false;
-                });
-                await Provider.of<LoadComments>(context, listen: false)
-                    .fechComments();
-                await Provider.of<LoadCommentedHelps>(context, listen: false)
-                    .fechCommentedHelps(api_key);
-              }
-            }
-          } else {
+          }).then((_) async {
             setState(() {
+              _parentCommentId = '';
               commentText.text = '';
               _isReplying = false;
+              tags = [];
             });
             await Provider.of<LoadComments>(context, listen: false)
-                .fechComments();
-            await Provider.of<LoadCommentedHelps>(context, listen: false)
-                .fechCommentedHelps(api_key);
-          }
+                .fechComments(askHelpId);
+          }).catchError((err) {
+            setState(() {
+              _parentCommentId = '';
+              _isReplying = false;
+              tags = [];
+            });
+            print('erru: $err');
+          });
+        } else {
+          setState(() {
+            _parentCommentId = '';
+            _isReplying = false;
+            tags = [];
+          });
+          print('failed to send message try again');
         }
       }
     } catch (e) {
+      setState(() {
+        _parentCommentId = '';
+        _isReplying = false;
+      });
+      tags = [];
       print('errs: $e');
     }
   }
@@ -233,13 +240,10 @@ class _CommentingPageState extends State<CommentingPage> {
   Widget build(BuildContext context) {
     final comment = Provider.of<LoadComments>(context);
 
-    setState(() {
-      askHelpId = ModalRoute.of(context).settings.arguments as String;
-    });
     final parentComments = comment.getParentComnents(askHelpId);
     final help = Provider.of<LoadHelps>(context).getHelp(askHelpId);
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
-    final commentors = comment.getComentors(api_key, askHelpId);
+    final commentors = comment.getComentors(user_id, askHelpId);
     final images = json.decode(help['crop_images']);
 
     return Scaffold(
@@ -253,19 +257,25 @@ class _CommentingPageState extends State<CommentingPage> {
               leading: IconButton(
                 icon: Icon(Icons.arrow_back),
                 onPressed: () async {
-                  await updateLastTimeViewed(api_key, askHelpId)
-                      .then((onValue) async {
-                    if (onValue == 200) {
-                      await Provider.of<LoadCommentedHelps>(context,
-                              listen: false)
-                          .fechCommentedHelps(api_key);
-                      await Provider.of<LoadCommentedHelps>(context,
-                              listen: false)
-                          .fechNotYetViewedComments(api_key);
-                    }
-                  });
-                  tags = [];
-                  Navigator.of(context).pop();
+                  if (_hasCommented) {
+                    final _url =
+                        'http://192.168.43.150/agrisen-api/index.php/Community/insert_or_update_commented_helps';
+                    await http.post(_url, body: {
+                      'askHelp_id': askHelpId,
+                    }, headers: {
+                      'api_key': api_key
+                    }).then((_) {
+                      tags = [];
+                      Navigator.of(context).pop();
+                    }).catchError((_) {
+                      print('object1: $_');
+                      Navigator.of(context).pop();
+                    });
+                  } else {
+                    print('has not commented');
+                    tags = [];
+                    Navigator.of(context).pop();
+                  }
                 },
               ),
               elevation: 3,
@@ -301,7 +311,7 @@ class _CommentingPageState extends State<CommentingPage> {
                   horizontal: 60.0,
                 ),
                 background: Image.network(
-                  'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/AskHelpImages/${images[0]}',
+                  'http://192.168.43.150/agrisen-api/uploads/ask_helps/${images[0]}',
                   fit: BoxFit.cover,
                   width: double.infinity,
                 ),
@@ -371,7 +381,7 @@ class _CommentingPageState extends State<CommentingPage> {
                                             .toString()
                                             .startsWith('https://')
                                         ? parentComments[index]['profile_image']
-                                        : 'http://${parentComments[index]['profile_image']}',
+                                        : 'http://192.168.43.150/agrisen-api/uploads/profile_images/${parentComments[index]['profile_image']}',
                                     parentComment: parentComments[index]
                                         ['comment'],
                                     commentorName: parentComments[index]
@@ -472,7 +482,7 @@ class _CommentingPageState extends State<CommentingPage> {
                                                   .toString()
                                                   .startsWith('https://')
                                               ? comment['profile_image']
-                                              : 'http://${comment['profile_image']}',
+                                              : 'http://192.168.43.150/agrisen-api/uploads/profile_images/${comment['profile_image']}',
                                         ),
                                       ),
                                       title: Text(comment['user_name']),
@@ -611,10 +621,17 @@ class _CommentingPageState extends State<CommentingPage> {
                 width: 5,
               ),
               FloatingActionButton(
-                onPressed: _isLoggin
+                onPressed: api_key != null
                     ? () async {
                         if (commentText.text.isNotEmpty) {
-                          await sendComment(askHelpId, tags, _parentCommentId);
+                          await sendComment(
+                            askHelpId,
+                            tags,
+                            _parentCommentId,
+                            help['crop_name'],
+                            help['crop_images'],
+                            help['question'],
+                          );
                         }
                       }
                     : null,

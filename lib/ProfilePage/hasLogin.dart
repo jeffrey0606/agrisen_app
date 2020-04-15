@@ -7,6 +7,7 @@ import 'package:agrisen_app/ProfilePage/questionsAskedTab.dart';
 import 'package:agrisen_app/Providers/userInfos.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
 import 'package:provider/provider.dart';
@@ -14,8 +15,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 
 import '../pickImage.dart';
-
-import '../Providers/uploadFilesToServer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../pickImage.dart';
@@ -26,7 +25,8 @@ import 'package:http/http.dart' as http;
 
 class HasLogin extends StatefulWidget {
   final Function alert;
-  HasLogin({@required this.alert});
+  final GlobalKey<ScaffoldState> globalKey;
+  HasLogin({@required this.alert, @required this.globalKey});
   @override
   _HasLoginState createState() => _HasLoginState();
 }
@@ -37,7 +37,7 @@ enum MenuItems {
 }
 
 class _HasLoginState extends State<HasLogin> {
-  bool _isLoading = true;
+  bool _isLoading = false;
   Directory directory;
   ScrollController _scrollController;
 
@@ -67,13 +67,13 @@ class _HasLoginState extends State<HasLogin> {
   @override
   void didChangeDependencies() async {
     super.didChangeDependencies();
-    setState(() {
-      _isLoading = true;
-    });
+
     if (once) {
+      setState(() {
+        _isLoading = true;
+      });
       final userProvider = Provider.of<UserInfos>(context);
       if (userProvider.userInfos['user_id'] == null) {
-        print('object');
         await userProvider.getUser().then((_) {
           setState(() {
             _isLoading = false;
@@ -101,26 +101,14 @@ class _HasLoginState extends State<HasLogin> {
   }
 
   void getImage(ImageSource imageSource, {int key, String profileImage}) async {
-    final dir1 = await path_provider.getTemporaryDirectory();
-
-    setState(() {
-      directory = dir1;
-    });
-
     File _image = await ImagePicker.pickImage(source: imageSource);
 
-    final reversed = reverseString(_image.absolute.path)
-        .replaceFirst(new RegExp(r'\w{0,10}[.]'), 'gpj.');
-
-    _image = File(reverseString(reversed));
-
-    final targetPath = dir1.absolute.path + '/${path.basename(_image.path)}';
-
-    final result = await FlutterImageCompress.compressAndGetFile(
-      _image.absolute.path,
-      targetPath,
-      format: CompressFormat.jpeg,
+    final properties = await FlutterNativeImage.getImageProperties(_image.path);
+    final result = await FlutterNativeImage.compressImage(
+      _image.path,
       quality: 50,
+      targetHeight: properties.height,
+      targetWidth: properties.width,
     );
 
     setState(() {
@@ -128,27 +116,41 @@ class _HasLoginState extends State<HasLogin> {
     });
   }
 
-  void uploadProfileImage(File image, String apikey, profileImage) async {
+  void uploadProfileImage(
+      File image, String apikey, String profileImage) async {
     setState(() {
       _isLoading = true;
     });
 
     var previousProfileImage = '';
 
-    if (!profileImage.startsWith('https://') && profileImage.isNotEmpty) {
-      previousProfileImage =
-          '/${profileImage.substring(profileImage.lastIndexOf('/') + 1)}';
+    if (profileImage != '') {
+      if (!profileImage.startsWith('https://')) {
+        previousProfileImage =
+            '${profileImage.substring(profileImage.lastIndexOf('/') + 1)}';
+        print('pre: $previousProfileImage');
+      }
     }
 
     final url =
-        'http://161.35.10.255/agrisen-api/index.php/Upload/upload_profile${previousProfileImage}';
+        'http://192.168.43.150/agrisen-api/index.php/Upload/upload_profile/$previousProfileImage';
+    print(url);
+    print(apikey);
 
-    final formData = FormData.fromMap(
-        {'profile_image': await MultipartFile.fromFile(image.path)});
+    final formData = FormData.fromMap({
+      'profile_image': await MultipartFile.fromFile(image.path),
+    });
     await Dio()
-        .post(url,
-            options: Options(headers: {'api_key': apikey}), data: formData)
-        .then((response) {
+        .post(
+      url,
+      options: Options(
+        headers: {
+          'api_key': apikey,
+        },
+      ),
+      data: formData,
+    )
+        .then((response) async{
       final result = json.decode(response.data);
       if (result.toString().contains('<p>')) {
         var s = '';
@@ -158,12 +160,13 @@ class _HasLoginState extends State<HasLogin> {
             ? '$f Please enter a .png, .jpg of .jpeg image.'
             : f);
       } else {
-        if (result) {
+        if (result == true) {
+          print(path.basename(image.path));
           setState(() {
             _isLoading = false;
-            profileImage =
-                'http://161.35.10.255/agrisen-api/uploads/profile_images/${path.basename(image.path)}';
           });
+          final userProvider = Provider.of<UserInfos>(context, listen: false);
+          userProvider.updateProfileImage('http://192.168.43.150/agrisen-api/uploads/profile_images/${path.basename(image.path).replaceAll(' ', '_')}');
           snakebar('your profile image was updated successfully');
         } else if (result == '2') {
           setState(() {
@@ -222,9 +225,11 @@ class _HasLoginState extends State<HasLogin> {
     final email = userProvider.userInfos['email'];
     final userId = userProvider.userInfos['user_id'];
     final userName = userProvider.userInfos['user_name'];
-    final apiKey = userProvider.userInfos['api_key'];
+    apiKey = userProvider.userInfos['api_key'];
 
-    print(profileImage);
+    print(apiKey);
+    print(profileImage.runtimeType);
+
     return Scaffold(
       key: _globalKey,
       body: SafeArea(
@@ -296,10 +301,8 @@ class _HasLoginState extends State<HasLogin> {
                             children: <Widget>[
                               InkWell(
                                 onTap: () => PickImage.galleryOrCameraPick(
-                                  context,
-                                  getImage,
-                                  profileImage: profileImage
-                                ),
+                                    context, getImage,
+                                    profileImage: profileImage),
                                 borderRadius: BorderRadius.all(
                                   Radius.circular(50),
                                 ),
@@ -358,7 +361,9 @@ class _HasLoginState extends State<HasLogin> {
                                     Container(
                                       width: double.infinity,
                                       child: Text(
-                                        userName == null ? 'Username' : userName,
+                                        userName == null
+                                            ? 'Username'
+                                            : userName,
                                         style: TextStyle(
                                           color:
                                               Color.fromRGBO(10, 17, 40, 1.0),
@@ -467,10 +472,14 @@ class _HasLoginState extends State<HasLogin> {
             body: TabBarView(
               children: <Widget>[
                 QuestionsAskedTab(
+                  userId: userId,
                   apiKey: apiKey,
                 ),
                 NotificationTab(),
-                DiseaseCheckedHistory(),
+                DiseaseCheckedHistory(
+                  globalKey: _globalKey,
+                  apiKey: apiKey,
+                ),
               ],
             ),
           ),

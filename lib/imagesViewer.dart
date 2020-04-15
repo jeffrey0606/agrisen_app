@@ -109,7 +109,7 @@ class _ImagesViewerState extends State<ImagesViewer> {
                   return _images(
                     size: size,
                     image: Image.network(
-                      'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/AskHelpImages/$image',
+                      'http://192.168.43.150/agrisen-api/uploads/ask_helps/$image',
                       fit: BoxFit.contain,
                     ),
                   );

@@ -17,6 +17,11 @@ class UserInfos extends ChangeNotifier {
     return {..._userInfos};
   }
 
+  void updateProfileImage(String profileImage){
+    _userInfos.update('profile_image', (_) => profileImage);
+    notifyListeners();
+  }
+
   Future<void> getUser() async {
     final sharedPref = await SharedPreferences.getInstance();
     if (sharedPref.containsKey('userInfos')) {
@@ -24,26 +29,30 @@ class UserInfos extends ChangeNotifier {
 
       final apiKey = userinfos['api-key'];
 
+      print(apiKey);
+
       try {
         final url =
-            'http://161.35.10.255/agrisen-api/index.php/Profile/get_user';
+            'http://192.168.43.150/agrisen-api/index.php/Profile/get_user';
         final response = await http.get(url, headers: {'api_key': apiKey});
 
         if (response != null) {
           final temp = json.decode(response.body) as Map<dynamic, dynamic>;
 
-          //final profileImage = temp['profile_image'];
-          temp.update('profile_image', (tempProfile) {
-            return tempProfile.toString().isEmpty
-                ? ''
-                : tempProfile.toString().startsWith('https://')
-                    ? tempProfile
-                    : 'http://161.35.10.255/agrisen-api/uploads/profile_images/$tempProfile';
-          });
-          temp.putIfAbsent('api_key', () => apiKey);
+          if (temp != null) {
+            //final profileImage = temp['profile_image'];
+            temp.update('profile_image', (tempProfile) {
+              return tempProfile == null
+                  ? ''
+                  : tempProfile.toString().startsWith('https://')
+                      ? tempProfile
+                      : 'http://192.168.43.150/agrisen-api/uploads/profile_images/$tempProfile';
+            });
+            temp.putIfAbsent('api_key', () => apiKey);
 
-          _userInfos = temp;
-          print('user: $_userInfos');
+            _userInfos = temp;
+            print('user: $_userInfos');
+          }
         }
       } catch (err) {
         print('errors: $err');

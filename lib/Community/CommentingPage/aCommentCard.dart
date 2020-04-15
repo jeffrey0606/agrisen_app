@@ -72,25 +72,27 @@ class ACommentCard extends StatelessWidget {
                       fontSize: 14,
                     ),
                   ),
-                  if(childComments.isEmpty)SizedBox(
-                    height: 25,
-                  ),
-                  if(childComments.isNotEmpty)FlatButton.icon(
-                    icon: viewReplies && currentIndex == index
-                        ? Icon(
-                            Icons.keyboard_arrow_up,
-                            color: Colors.blue,
-                          )
-                        : Icon(
-                            Icons.keyboard_arrow_down,
-                            color: Colors.blue,
-                          ),
-                    label: Text(
-                      'view replies',
-                      style: TextStyle(color: Colors.blue),
+                  if (childComments.isEmpty)
+                    SizedBox(
+                      height: 25,
                     ),
-                    onPressed: () => viewRepliesFunction(),
-                  )
+                  if (childComments.isNotEmpty)
+                    FlatButton.icon(
+                      icon: viewReplies && currentIndex == index
+                          ? Icon(
+                              Icons.keyboard_arrow_up,
+                              color: Colors.blue,
+                            )
+                          : Icon(
+                              Icons.keyboard_arrow_down,
+                              color: Colors.blue,
+                            ),
+                      label: Text(
+                        'view replies',
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                      onPressed: () => viewRepliesFunction(),
+                    )
                 ],
               ),
             ),
@@ -104,16 +106,61 @@ class ACommentCard extends StatelessWidget {
             ),
             child: Column(
               children: childComments.map((comment) {
+                final profileImage = comment['profile_image'];
+
+                print(profileImage);
+
+                var nameInitials = '';
+                comment['user_name'].split(' ').forEach((f) {
+                  if (nameInitials.length == 1) {
+                    nameInitials += ' ';
+                  }
+                  nameInitials += '${f.substring(0, 1)}';
+                });
+
                 return Column(
                   children: <Widget>[
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        CircleAvatar(
-                          maxRadius: 20,
-                          backgroundColor: Colors.blue,
-                          backgroundImage: NetworkImage(comment['profile_image'].toString().startsWith('https://') ? comment['profile_image'] : 'http://${comment['profile_image']}'),
-                        ),
+                        profileImage == null
+                            ? Container(
+                                width: 45,
+                                height: 45,
+                                decoration: BoxDecoration(
+                                  color: Colors.blue,
+                                  gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        //Colors.lime,
+                                        //Colors.pink,
+                                        Colors.cyan,
+                                        Colors.cyanAccent
+                                      ]),
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(60),
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    nameInitials.toUpperCase(),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                ))
+                            : CircleAvatar(
+                                maxRadius: 20,
+                                backgroundColor: Colors.blue,
+                                backgroundImage: NetworkImage(profileImage
+                                        .toString()
+                                        .startsWith('https://')
+                                    ? profileImage
+                                    : 'http://192.168.43.150/agrisen-api/uploads/profile_images/$profileImage'),
+                              ),
                         SizedBox(
                           width: 10,
                         ),
@@ -132,7 +179,8 @@ class ACommentCard extends StatelessWidget {
                                     ),
                                   ),
                                   TextSpan(
-                                    text: '   ${TimeAjuster.ajust(DateTime.parse(comment['comment_timestamp']))}',
+                                    text:
+                                        '   ${TimeAjuster.ajust(DateTime.parse(comment['comment_timestamp']))}',
                                     style: TextStyle(
                                       color: Colors.grey,
                                       fontStyle: FontStyle.italic,

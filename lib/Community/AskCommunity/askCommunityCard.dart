@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:agrisen_app/Providers/loadComments.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:http/http.dart' as http;
 
 class AskCommunityCard extends StatefulWidget {
   final String cropName;
@@ -33,21 +35,33 @@ class AskCommunityCard extends StatefulWidget {
 
 class _AskCommunityCardState extends State<AskCommunityCard> {
   bool once = true;
+  int commentsNumber = 0;
 
   @override
   void didChangeDependencies() async {
     if (once) {
-      await Provider.of<LoadComments>(context, listen: false).fechComments();
+      //await Provider.of<LoadComments>(context, listen: false).fechComments();
+      await getCommentsNumber(widget.askHelpId);
     }
     once = false;
     super.didChangeDependencies();
   }
 
+   Future getCommentsNumber(String askHelpId) async{
+    try {
+      final response = await http.get('http://192.168.43.150/agrisen-api/index.php/Community/number_of_comments/$askHelpId/');
+      if(response != null){
+        setState(() {
+          commentsNumber = json.decode(response.body);
+        });
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final commentsNumber = Provider.of<LoadComments>(context, listen: false)
-        .getCommentsNumber(widget.askHelpId)
-        .toString();
     var nameInitials = '';
     widget.userName.split(' ').forEach((f) {
       setState(() {
@@ -70,7 +84,7 @@ class _AskCommunityCardState extends State<AskCommunityCard> {
                 children: <Widget>[
                   Expanded(
                     child: Image.network(
-                      'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/AskHelpImages/${this.widget.cropImage}',
+                      'http://192.168.43.150/agrisen-api/uploads/ask_helps/${widget.cropImage}',
                       fit: BoxFit.cover,
                       width: double.infinity,
                     ),
@@ -118,11 +132,13 @@ class _AskCommunityCardState extends State<AskCommunityCard> {
                                           ),
                                         )
                                       : CachedNetworkImage(
+                                        width: double.infinity,
+                                        fit: BoxFit.cover,
                                           imageUrl: widget.profileImage
                                                   .toString()
                                                   .startsWith('https://')
                                               ? widget.profileImage
-                                              : 'http://192.168.43.150/Agrisen_app/AgrisenMobileAppAPIs/ProfileImages/${widget.profileImage}',
+                                              : 'http://192.168.43.150/agrisen-api/uploads/profile_images/${widget.profileImage}',
                                           errorWidget: (context, str, obj) {
                                             return Center(
                                               child: Text(
@@ -219,7 +235,7 @@ class _AskCommunityCardState extends State<AskCommunityCard> {
                                         ),
                                         child: FittedBox(
                                           child: Text(
-                                            commentsNumber,
+                                            commentsNumber.toString(),
                                             textAlign: TextAlign.center,
                                             style: TextStyle(
                                               fontSize: 9,
