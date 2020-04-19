@@ -68,7 +68,7 @@ class ACommentCard extends StatelessWidget {
                   Text(
                     parentComment,
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w500,
                       fontSize: 14,
                     ),
                   ),

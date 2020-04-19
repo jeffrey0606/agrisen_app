@@ -73,7 +73,7 @@ class _DiseaseCheckedHistoryState extends State<DiseaseCheckedHistory> {
           label,
           style: TextStyle(
             fontSize: 17,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w500,
           ),
         ),
         SizedBox(
@@ -109,8 +109,8 @@ class _DiseaseCheckedHistoryState extends State<DiseaseCheckedHistory> {
             if (snapshot.hasData) {
               http.Response response = snapshot.data;
               final data = response.body.toString().isEmpty
-                  ? null
-                  : json.decode(response.body) as List<dynamic>;
+              ? null
+              : json.decode(response.body) as List<dynamic>;
               print(data);
               if (data != null && data.isNotEmpty) {
                 return Container(
@@ -133,7 +133,7 @@ class _DiseaseCheckedHistoryState extends State<DiseaseCheckedHistory> {
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color: Colors.red,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w500,
                                       fontSize: 18,
                                     ),
                                   ),
@@ -188,7 +188,7 @@ class _DiseaseCheckedHistoryState extends State<DiseaseCheckedHistory> {
                           ),
                           AnimatedContainer(
                             height: _currentIndex == index
-                                ? _showMore ? 200 : 50
+                                ? _showMore ? 220 : 50
                                 : 50,
                             duration: Duration(milliseconds: 300),
                             child: Container(
@@ -212,15 +212,20 @@ class _DiseaseCheckedHistoryState extends State<DiseaseCheckedHistory> {
                                                 TextSpan(
                                                   text: 'Date : ',
                                                   style: TextStyle(
-                                                      color: Colors.black,
-                                                      fontWeight:
-                                                          FontWeight.w700),
+                                                    color: Colors.black,
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                    fontFamily:
+                                                        'MontserratAlternates',
+                                                  ),
                                                 ),
                                                 TextSpan(
                                                   text:
                                                       '${formatDate(data[index]['timestamp'])}',
                                                   style: TextStyle(
                                                     color: Colors.black,
+                                                    fontFamily:
+                                                        'MontserratAlternates',
                                                   ),
                                                 )
                                               ]),
@@ -367,7 +372,7 @@ class _DiseaseCheckedHistoryState extends State<DiseaseCheckedHistory> {
                                                                               Colors.white,
                                                                           child:
                                                                               SvgPicture.network(
-                                                                            'http://www.agrisen.net/agrisen-api/uploads/crops/${data[index]['crop_name'].split(' ').join('')}.svg',
+                                                                            'http://161.35.10.255/agrisen-api/uploads/crops/${data[index]['crop_name'].split(' ').join('')}.svg',
                                                                             width:
                                                                                 60,
                                                                             height:
@@ -389,7 +394,7 @@ class _DiseaseCheckedHistoryState extends State<DiseaseCheckedHistory> {
                                                                   fontSize: 17,
                                                                   fontWeight:
                                                                       FontWeight
-                                                                          .bold,
+                                                                          .w500,
                                                                 ),
                                                                 textAlign:
                                                                     TextAlign
@@ -458,17 +463,22 @@ class _DiseaseCheckedHistoryState extends State<DiseaseCheckedHistory> {
                           TextSpan(
                             text:
                                 'You have not done any health prediction on your crop yet. \n',
-                            style:
-                                TextStyle(color: Colors.black54, fontSize: 18),
+                            style: TextStyle(
+                              color: Colors.black54,
+                              fontSize: 18,
+                              fontFamily: 'MontserratAlternates',
+                            ),
                           ),
                           TextSpan(
                             text:
                                 'Please click on the button below to predict your crop health.',
                             style: TextStyle(
-                                color: Colors.green,
-                                fontStyle: FontStyle.italic,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold),
+                              color: Colors.green,
+                              fontStyle: FontStyle.italic,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'MontserratAlternates',
+                            ),
                           ),
                         ],
                       ),

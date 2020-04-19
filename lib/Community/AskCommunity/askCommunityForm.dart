@@ -181,8 +181,8 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
   };
 
   @override
-  void dispose() async {
-    super.dispose();
+  void deactivate() async{
+    super.deactivate();
     if (directory != null) await directory.delete(recursive: true);
   }
 
@@ -197,7 +197,8 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
         iconTheme: IconThemeData(
           color: Color.fromRGBO(10, 17, 40, 1.0),
         ),
-        title: Text('Form'),
+        title: Text('Ask Help'),
+        titleSpacing: 0,
         actions: <Widget>[
           IconButton(
             onPressed: () => _askHelp(context, userInfos),

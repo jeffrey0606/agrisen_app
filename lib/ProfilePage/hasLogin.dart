@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:agrisen_app/ProfilePage/diseaseCheckedTab.dart';
 import 'package:agrisen_app/ProfilePage/notificationTab.dart';
 import 'package:agrisen_app/ProfilePage/questionsAskedTab.dart';
+import 'package:agrisen_app/Providers/loadNotification.dart';
 import 'package:agrisen_app/Providers/userInfos.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
@@ -72,7 +73,8 @@ class _HasLoginState extends State<HasLogin> {
       setState(() {
         _isLoading = true;
       });
-      final userProvider = Provider.of<UserInfos>(context);
+      await Provider.of<LoadNotifications>(context, listen: false).fetchNotificationDetails();
+      final userProvider = Provider.of<UserInfos>(context, listen: false);
       if (userProvider.userInfos['user_id'] == null) {
         await userProvider.getUser().then((_) {
           setState(() {
@@ -160,13 +162,13 @@ class _HasLoginState extends State<HasLogin> {
             ? '$f Please enter a .png, .jpg of .jpeg image.'
             : f);
       } else {
-        if (result == true) {
+        if (result.containsKey('file_name')) {
           print(path.basename(image.path));
           setState(() {
             _isLoading = false;
           });
           final userProvider = Provider.of<UserInfos>(context, listen: false);
-          userProvider.updateProfileImage('http://192.168.43.150/agrisen-api/uploads/profile_images/${path.basename(image.path).replaceAll(' ', '_')}');
+          userProvider.updateProfileImage('http://192.168.43.150/agrisen-api/uploads/profile_images/${result['file_name']}');
           snakebar('your profile image was updated successfully');
         } else if (result == '2') {
           setState(() {
@@ -220,6 +222,8 @@ class _HasLoginState extends State<HasLogin> {
 
   @override
   Widget build(BuildContext context) {
+    final notif = Provider.of<LoadNotifications>(context);
+    final _isVerified = Provider.of<UserInfos>(context).userInfos['verification'];
     final userProvider = Provider.of<UserInfos>(context);
     final profileImage = userProvider.userInfos['profile_image'];
     final email = userProvider.userInfos['email'];
@@ -385,13 +389,7 @@ class _HasLoginState extends State<HasLogin> {
                                     ),
                                   ],
                                 ),
-                              ),
-                              IconButton(
-                                alignment: Alignment.topCenter,
-                                padding: EdgeInsets.only(bottom: 0),
-                                onPressed: () => null,
-                                icon: Icon(Icons.edit),
-                              ),
+                              )
                             ],
                           ),
                         ),
@@ -400,14 +398,21 @@ class _HasLoginState extends State<HasLogin> {
                   ),
                   bottom: TabBar(
                     indicatorColor: Colors.blue,
-                    indicatorPadding: EdgeInsets.symmetric(horizontal: 70),
+                    indicatorPadding: EdgeInsets.symmetric(horizontal: 40),
+                    onTap: (tab) async{
+                      if(tab == 1){
+                        await Provider.of<LoadNotifications>(context, listen: false).fetchNotificationDetails();
+                      }
+                    },
                     labelStyle: TextStyle(
-                      fontSize: 20,
+                      fontSize: 16,
+                      fontFamily: 'MontserratAlternates',
                     ),
                     labelColor: Colors.blue,
                     unselectedLabelColor: Colors.black45,
                     unselectedLabelStyle: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
+                      fontFamily: 'MontserratAlternates',
                     ),
                     isScrollable: true,
                     tabs: <Widget>[
@@ -427,7 +432,8 @@ class _HasLoginState extends State<HasLogin> {
                             SizedBox(
                               width: 5,
                             ),
-                            SizedBox(
+                            
+                            if(_isVerified != null || notif.newNotifications > 0)SizedBox(
                               height: 20,
                               child: Container(
                                 alignment: Alignment.center,
@@ -443,7 +449,7 @@ class _HasLoginState extends State<HasLogin> {
                                 ),
                                 child: FittedBox(
                                   child: Text(
-                                    '3',
+                                    _isVerified != null ? notif.newNotifications > 0 ? (1 + notif.newNotifications).toString() : 1.toString() : 0.toString(),
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 9,
@@ -475,7 +481,9 @@ class _HasLoginState extends State<HasLogin> {
                   userId: userId,
                   apiKey: apiKey,
                 ),
-                NotificationTab(),
+                NotificationTab(
+                  apiKey: apiKey,
+                ),
                 DiseaseCheckedHistory(
                   globalKey: _globalKey,
                   apiKey: apiKey,

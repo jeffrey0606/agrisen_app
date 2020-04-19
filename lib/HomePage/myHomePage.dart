@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:agrisen_app/HomePage/articlesWidget.dart';
 import 'package:agrisen_app/HomePage/carouselWidget.dart';
 import 'package:agrisen_app/HomePage/cropsWidget.dart';
+import 'package:agrisen_app/Providers/loadNotification.dart';
 import 'package:agrisen_app/Providers/userInfos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -64,7 +65,8 @@ class _HomeState extends State<Home> {
   void didChangeDependencies() async {
     super.didChangeDependencies();
     if (once) {
-      final userProvider = Provider.of<UserInfos>(context);
+      await Provider.of<LoadNotifications>(context, listen: false).fetchNotificationDetails();
+      final userProvider = Provider.of<UserInfos>(context, listen: false);
       if (userProvider.userInfos['user_id'] == null) {
         await userProvider.getUser();
       }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:agrisen_app/Providers/loadNotification.dart';
 import 'package:agrisen_app/Providers/userInfos.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -35,7 +36,8 @@ class _CommunityState extends State<Community> {
     super.didChangeDependencies();
 
     if (once) {
-      final userProvider = Provider.of<UserInfos>(context);
+      await Provider.of<LoadNotifications>(context, listen: false).fetchNotificationDetails();
+      final userProvider = Provider.of<UserInfos>(context, listen: false);
       if (userProvider.userInfos['user_id'] == null) {
         await userProvider.getUser();
         await notYetViewComments();
@@ -72,17 +74,8 @@ class _CommunityState extends State<Community> {
     });
   }
 
-  /*void _fechCommentedHelps(String apiKey) async {
-    await Provider.of<LoadCommentedHelps>(context, listen: false)
-        .fechCommentedHelps(apiKey);
-    await Provider.of<LoadCommentedHelps>(context, listen: false)
-        .fechNotYetViewedComments(apiKey);
-  }*/
-
   @override
   Widget build(BuildContext context) {
-    //final notYetViewedComments =
-    //Provider.of<LoadCommentedHelps>(context).getNotYetViewedComments;
     return DefaultTabController(
       initialIndex: 0,
       length: 2,
@@ -135,11 +128,13 @@ class _CommunityState extends State<Community> {
                   indicatorPadding: EdgeInsets.symmetric(horizontal: 60),
                   labelStyle: TextStyle(
                     fontSize: 16,
+                    fontFamily: 'MontserratAlternates',
                   ),
                   labelColor: Colors.blue,
                   unselectedLabelColor: Colors.black45,
                   unselectedLabelStyle: TextStyle(
-                    fontSize: 12,
+                    fontSize: 14,
+                    fontFamily: 'MontserratAlternates',
                   ),
                   tabs: <Widget>[
                     Tab(

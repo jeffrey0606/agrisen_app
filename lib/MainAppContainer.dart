@@ -12,6 +12,7 @@ import 'PlantDiseaseDetection/diseaseDetectionPage.dart';
 import 'ProfilePage/hasNotLogin.dart';
 import 'Community/community.dart';
 import './Community/AskCommunity/askCommunityForm.dart';
+import 'Providers/loadNotification.dart';
 import 'Providers/userInfos.dart';
 
 class MainAppContainer extends StatefulWidget {
@@ -28,19 +29,18 @@ class _MainAppContainerState extends State<MainAppContainer> {
   int _currentTab = 0;
   bool once = true;
 
-  @override
+  /*@override
   void didChangeDependencies() async {
     if (once) {
-      final userProvider = Provider.of<UserInfos>(context);
+      await Provider.of<LoadNotifications>(context, listen: false).fetchNotificationDetails();
+      final userProvider = Provider.of<UserInfos>(context, listen: false);
       if (userProvider.userInfos['user_id'] == null) {
         await userProvider.getUser();
       }
-      //await Provider.of<LoadHelps>(context).fetchHelps();
-      //await Provider.of<LoadComments>(context, listen: false).fechComments();
     }
     once = false;
     super.didChangeDependencies();
-  }
+  }*/
 
   snackBar(GlobalKey<ScaffoldState> globalKey, String message) {
     globalKey.currentState.showSnackBar(
@@ -75,7 +75,7 @@ class _MainAppContainerState extends State<MainAppContainer> {
           globalKey, 'You haven\'t login to the app yet. you can do it here!');
     } else {
       final userinfos = json.decode(sharedPref.getString('userInfos'));
-      final clearUserInfos =  Provider.of<UserInfos>(context, listen: false);
+      final clearUserInfos = Provider.of<UserInfos>(context, listen: false);
 
       final subscriber = userinfos['subscriber'];
       if (subscriber == 'google') {
@@ -99,7 +99,7 @@ class _MainAppContainerState extends State<MainAppContainer> {
           snackBar(globalKey, onError);
         }).then((_) async {
           final res = await sharedPref.clear();
-          
+
           if (res) {
             await clearUserInfos.getUser();
             setState(() {
@@ -178,6 +178,10 @@ class _MainAppContainerState extends State<MainAppContainer> {
 
   @override
   Widget build(BuildContext context) {
+    final newNotif = Provider.of<LoadNotifications>(context).newNotifications;
+    final _isVerified = Provider.of<UserInfos>(context).userInfos['verification'];
+    final apiKey = Provider.of<UserInfos>(context).userInfos['api_key'];
+
     return Scaffold(
       key: _globalkey,
       appBar: _currentTab == 1 || _currentTab == 0 || _currentTab == 2
@@ -237,7 +241,7 @@ class _MainAppContainerState extends State<MainAppContainer> {
                     )
                   : null,
       bottomNavigationBar: PhysicalModel(
-        color: Colors.red,
+        color: Colors.black,
         elevation: 50,
         child: AnimatedContainer(
           duration: Duration(milliseconds: 150),
@@ -265,18 +269,35 @@ class _MainAppContainerState extends State<MainAppContainer> {
                 title: Text('community'),
               ),
               BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  'assets/SVGPics/profile.svg',
-                  height: _currentTab == 2 ? 30 : 20,
-                  color: _currentTab == 2
-                      ? Color.fromRGBO(10, 17, 40, 1.0)
-                      : Colors.grey,
+                icon: Container(
+                  width: double.infinity,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: <Widget>[
+                      SvgPicture.asset(
+                        'assets/SVGPics/profile.svg',
+                        height: _currentTab == 2 ? 30 : 20,
+                        color: _currentTab == 2
+                            ? Color.fromRGBO(10, 17, 40, 1.0)
+                            : Colors.grey,
+                      ),
+                      if(_isVerified != null || newNotif > 0)Positioned(
+                        top: 0,
+                        right: _currentTab == 2 ? 42 : 45,
+                        child: CircleAvatar(
+                          backgroundColor: Colors.red,
+                          radius: _currentTab == 2 ? 7 : 6,
+                        ),
+                      )
+                    ],
+                  ),
                 ),
                 title: Text('profile'),
               ),
             ],
             backgroundColor: Color.fromRGBO(237, 245, 252, 1.0),
             elevation: 15,
+            selectedFontSize: 12,
             selectedItemColor: Color.fromRGBO(10, 17, 40, 1.0),
             unselectedItemColor: Colors.grey,
             currentIndex: _currentTab,
@@ -289,81 +310,82 @@ class _MainAppContainerState extends State<MainAppContainer> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: 
-      _currentTab == 2 ? null
-      :
-      _currentTab == 1
-          ? AnimatedSwitcher(
-              duration: Duration(milliseconds: 200),
-              key: UniqueKey(),
-              transitionBuilder: (Widget child, Animation<double> animation) {
-                return FadeTransition(
-                  opacity: animation.drive(CurveTween(curve: Curves.ease)),
-                  child: child,
-                );
-              },
-              child: FloatingActionButton.extended(
-                onPressed: () {
-                  final apiKey =
-                      Provider.of<UserInfos>(context, listen: false).userInfos['api_key'];
-                  if (apiKey != null) {
-                    Navigator.pushNamed(
-                      context,
-                      AskCommunityForm.routeName,
-                      arguments: {'api-key': apiKey},
+      floatingActionButton: _currentTab == 2
+          ? null
+          : _currentTab == 1
+              ? AnimatedSwitcher(
+                  duration: Duration(milliseconds: 200),
+                  key: UniqueKey(),
+                  transitionBuilder:
+                      (Widget child, Animation<double> animation) {
+                    return FadeTransition(
+                      opacity: animation.drive(CurveTween(curve: Curves.ease)),
+                      child: child,
                     );
-                  } else {
-                    setState(() {
-                      _currentTab = 2;
-                    });
-                    snackBar(_globalkey,
-                        'You haven\'t login to the app yet. you can do it here!');
-                  }
-                },
-                label: Text(
-                  'Ask Help',
-                  style: TextStyle(
-                    color: Color.fromRGBO(237, 245, 252, 1.0),
-                  ),
-                ),
-                icon: Icon(
-                  Icons.help_outline,
-                  color: Color.fromRGBO(237, 245, 252, 1.0),
-                ),
-                backgroundColor: Color.fromRGBO(10, 17, 40, 1.0),
-              ),
-            )
-          : AnimatedOpacity(
-              opacity: _showButton ? 1.0 : 0,
-              child: AnimatedSwitcher(
-                duration: Duration(milliseconds: 200),
-                key: UniqueKey(),
-                transitionBuilder: (Widget child, Animation<double> animation) {
-                  return FadeTransition(
-                    opacity:
-                        animation.drive(CurveTween(curve: Curves.elasticOut)),
-                    child: child,
-                  );
-                },
-                child: FloatingActionButton(
-                  onPressed: () => Navigator.of(context)
-                      .pushNamed(DiseaseDetectionPage.nameRoute),
-                  child: ImageIcon(
-                    AssetImage(
-                      'assets/runTestIcon.png',
+                  },
+                  child: FloatingActionButton.extended(
+                    key: UniqueKey(),
+                    onPressed: () {
+                      if (apiKey != null) {
+                        Navigator.pushNamed(
+                          context,
+                          AskCommunityForm.routeName,
+                          arguments: {'api-key': apiKey},
+                        );
+                      } else {
+                        setState(() {
+                          _currentTab = 2;
+                        });
+                        snackBar(_globalkey,
+                            'You haven\'t login to the app yet. you can do it here!');
+                      }
+                    },
+                    label: Text(
+                      'Ask Help',
+                      style: TextStyle(
+                        color: Color.fromRGBO(237, 245, 252, 1.0),
+                      ),
                     ),
-                    color: Color.fromRGBO(237, 245, 252, 1.0),
-                    size: 40,
+                    icon: Icon(
+                      Icons.help_outline,
+                      color: Color.fromRGBO(237, 245, 252, 1.0),
+                    ),
+                    backgroundColor: Color.fromRGBO(10, 17, 40, 1.0),
                   ),
-                  elevation: 5,
-                  tooltip: 'check for plant disease',
-                  backgroundColor: Color.fromRGBO(10, 17, 40, 1.0),
+                )
+              : AnimatedOpacity(
+                  opacity: _showButton ? 1.0 : 0,
+                  child: AnimatedSwitcher(
+                    duration: Duration(milliseconds: 200),
+                    key: UniqueKey(),
+                    transitionBuilder:
+                        (Widget child, Animation<double> animation) {
+                      return FadeTransition(
+                        opacity: animation
+                            .drive(CurveTween(curve: Curves.elasticOut)),
+                        child: child,
+                      );
+                    },
+                    child: FloatingActionButton(
+                      key: UniqueKey(),
+                      onPressed: () => Navigator.of(context)
+                          .pushNamed(DiseaseDetectionPage.nameRoute),
+                      child: ImageIcon(
+                        AssetImage(
+                          'assets/runTestIcon.png',
+                        ),
+                        color: Color.fromRGBO(237, 245, 252, 1.0),
+                        size: 40,
+                      ),
+                      elevation: 5,
+                      tooltip: 'check for plant disease',
+                      backgroundColor: Color.fromRGBO(10, 17, 40, 1.0),
+                    ),
+                  ),
+                  duration: Duration(
+                    milliseconds: 300,
+                  ),
                 ),
-              ),
-              duration: Duration(
-                milliseconds: 300,
-              ),
-            ),
     );
   }
 }

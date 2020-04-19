@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:agrisen_app/Community/AskCommunity/askCommunityForm.dart';
+import 'package:agrisen_app/Community/CommentingPage/commentingPage.dart';
 import 'package:agrisen_app/Providers/loadHelps.dart';
 import 'package:agrisen_app/Providers/userInfos.dart';
 import 'package:flutter/material.dart';
@@ -101,7 +102,7 @@ class _QuestionsAskedTabState extends State<QuestionsAskedTab>
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                                 SizedBox(
@@ -112,16 +113,18 @@ class _QuestionsAskedTabState extends State<QuestionsAskedTab>
                           ListTile(
                             leading: InkWell(
                               onTap: () => Navigator.of(context).pushNamed(
-                                  ImagesViewer.namedRoute,
-                                  arguments: {
-                                    'from': 'network',
-                                    'images': images
-                                  }),
+                                ImagesViewer.namedRoute,
+                                arguments: {
+                                  'from': 'network',
+                                  'images': images
+                                },
+                              ),
                               child: Image.network(
-                                  'http://192.168.43.150/agrisen-api/uploads/ask_helps/${images[0]}',
-                                  fit: BoxFit.cover,
-                                  width: 90,
-                                  height: double.infinity),
+                                'http://192.168.43.150/agrisen-api/uploads/ask_helps/${images[0]}',
+                                fit: BoxFit.cover,
+                                width: 90,
+                                height: double.infinity,
+                              ),
                             ),
                             title: Text(
                               help['question'].endsWith('?')
@@ -130,6 +133,13 @@ class _QuestionsAskedTabState extends State<QuestionsAskedTab>
                               maxLines: 3,
                               overflow: TextOverflow.ellipsis,
                             ),
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                CommentingPage.routeName,
+                                arguments: help['askHelp_id'],
+                              );
+                            },
                             subtitle: Text(help['crop_name']),
                             trailing: FittedBox(
                               child: Column(

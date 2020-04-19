@@ -20,7 +20,7 @@ class ArticlesWidget extends StatelessWidget {
             softWrap: true,
             style: TextStyle(
               color: Colors.blue, //Color.fromRGBO(10, 17, 40, 1.0),
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
               fontSize: 20,
             ),
             textAlign: TextAlign.left,
@@ -104,7 +104,7 @@ class _ArticlesSkeletonWidgetState extends State<ArticlesSkeletonWidget> {
             softWrap: true,
             style: TextStyle(
               color: Colors.blue, //Color.fromRGBO(10, 17, 40, 1.0),
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
               fontSize: 20,
             ),
             textAlign: TextAlign.left,

@@ -40,7 +40,6 @@ class _AskCommunityCardState extends State<AskCommunityCard> {
   @override
   void didChangeDependencies() async {
     if (once) {
-      //await Provider.of<LoadComments>(context, listen: false).fechComments();
       await getCommentsNumber(widget.askHelpId);
     }
     once = false;
@@ -151,12 +150,12 @@ class _AskCommunityCardState extends State<AskCommunityCard> {
                                               ),
                                             );
                                           },
-                                          placeholder: (context, str) {
+                                          /*placeholder: (context, str) {
                                             return SvgPicture.network(
                                               'http://192.168.43.150/Agrisen_app/assetImages/profileImage.svg',
                                               width: 115,
                                             );
-                                          },
+                                          },*/
                                         ),
                                 ),
                               ),
@@ -196,7 +195,7 @@ class _AskCommunityCardState extends State<AskCommunityCard> {
                                 ? this.widget.question
                                 : '${this.widget.question} ?',
                             style: TextStyle(
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w500,
                               fontSize: 16,
                             ),
                             overflow: TextOverflow.ellipsis,

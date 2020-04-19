@@ -290,7 +290,7 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
           label,
           style: TextStyle(
             fontSize: 17,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
           ),
         ),
         SizedBox(

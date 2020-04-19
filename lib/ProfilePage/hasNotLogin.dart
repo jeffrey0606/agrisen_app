@@ -47,20 +47,44 @@ class _HasNotLoginState extends State<HasNotLogin> {
           final result = json.decode(response.body);
           print('object: $result');
           if (result != null) {
-            final sharedPref = await SharedPreferences.getInstance();
-            final res = await sharedPref.setString(
-              'userInfos',
-              json.encode({
-                'api-key': result,
-                'subscriber': 'emailAndPassword',
-              }),
-            );
-            if (res) {
-              setState(() {
-                _isLogin = true;
+            if (DateTime.parse(result['creation_date'].toString())
+                    .add(Duration(days: 3))
+                    .compareTo(DateTime.now()) <
+                0) {
+              http.post('http://192.168.43.150/agrisen-api/index.php/Profile/delete_user', body: userData).then((_) {
+                    setState(() {
+                      _isSigingin = false;
+                    });
+                    snakebar(
+                    'Your Account has been Deleted Since you did not verified your Email');
+              }).catchError((_) {
+                setState(() {
+                  _isSigingin = false;
+                });
+                snakebar(
+                    'User was not found please try again with the correct credentials.');
               });
             } else {
-              print('shared');
+              final sharedPref = await SharedPreferences.getInstance();
+              final res = await sharedPref.setString(
+                'userInfos',
+                json.encode({
+                  'api-key': result['api_key'],
+                  'subscriber': 'emailAndPassword',
+                }),
+              );
+              final res1 = await sharedPref.setString(
+                'verification',
+                result['creation_date'].toString(),
+              );
+
+              if (res || res1) {
+                setState(() {
+                  _isLogin = true;
+                });
+              } else {
+                print('shared');
+              }
             }
           } else {
             setState(() {
@@ -79,6 +103,7 @@ class _HasNotLoginState extends State<HasNotLogin> {
         setState(() {
           _isSigingin = false;
         });
+        print('object: $err');
         snakebar('Something when wrong please try again.');
       });
     }
@@ -126,7 +151,12 @@ class _HasNotLoginState extends State<HasNotLogin> {
                 },
               ),
             );
-            if (res) {
+            final res1 = await sharedPref.setString(
+              'verification',
+              DateTime.now().toString(),
+            );
+
+            if (res && res1) {
               setState(() {
                 _isLogin = true;
               });

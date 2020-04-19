@@ -47,13 +47,18 @@ dependencies:
   mlkit: ^0.15.0
   flutter_native_image: ^0.0.5
   mime: ^0.9.6+3
+#  flutter_launcher_icons: ^0.7.4
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-
+#flutter_icons:
+  #android: true 
+  #ios: true
+  #image_path: "assets/agrisen_icon.png"
+  #adaptive_icon_background: "#42f545"
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -74,11 +79,10 @@ flutter:
     - assets/SVGPics/facebook.svg
     - assets/SVGPics/google.svg
     - assets/SVGPics/profileImage.svg
-    - assets/SVGPics/brokenImageIcon.svg
-    - assets/SVGPics/pickFromGallery.svg
     - assets/SVGPics/askcomunity.svg
     - assets/imageNotFoundOrange.png
     - assets/imageNotAvailable.png
+    - assets/agrisen_logo_trans.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
@@ -92,21 +96,36 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: Comfortaa
+#    - family: Comfortaa
+#      fonts:
+#        - asset: assets/fonts/Comfortaa/Comfortaa-Regular.ttf
+#        - asset: assets/fonts/Comfortaa/Comfortaa-Light.ttf
+#        - asset: assets/fonts/Comfortaa/Comfortaa-Medium.ttf
+#        - asset: assets/fonts/Comfortaa/Comfortaa-Bold.ttf
+#        - asset: assets/fonts/Comfortaa/Comfortaa-SemiBold.ttf
+#    - family: KaushanScript
+#      fonts:
+#        - asset: assets/fonts/KaushanScript-Regular.ttf
+    - family: MontserratAlternates
       fonts:
-        - asset: assets/fonts/Comfortaa/Comfortaa-Regular.ttf
-        - asset: assets/fonts/Comfortaa/Comfortaa-Light.ttf
-        - asset: assets/fonts/Comfortaa/Comfortaa-Medium.ttf
-        - asset: assets/fonts/Comfortaa/Comfortaa-Bold.ttf
-        - asset: assets/fonts/Comfortaa/Comfortaa-SemiBold.ttf
-    - family: KaushanScript
-      fonts:
-        - asset: assets/fonts/KaushanScript-Regular.ttf
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  #
+        - asset: assets/fonts/MontserratAlternates/MontserratAlternates-BlackItalic.otf
+        - asset: assets/fonts/MontserratAlternates/MontserratAlternates-Black.otf
+        - asset: assets/fonts/MontserratAlternates/MontserratAlternates-BoldItalic.otf
+        - asset: assets/fonts/MontserratAlternates/MontserratAlternates-Bold.otf
+        #- asset: assets/fonts/MontserratAlternates/MontserratAlternates-ExtraBoldItalic.otf
+        #- asset: assets/fonts/MontserratAlternates/MontserratAlternates-ExtraBold.otf
+        #- asset: assets/fonts/MontserratAlternates/MontserratAlternates-ExtraLightItalic.otf
+        #- asset: assets/fonts/MontserratAlternates/MontserratAlternates-ExtraLight.otf
+        - asset: assets/fonts/MontserratAlternates/MontserratAlternates-Italic.otf
+        - asset: assets/fonts/MontserratAlternates/MontserratAlternates-LightItalic.otf
+        - asset: assets/fonts/MontserratAlternates/MontserratAlternates-Light.otf
+        - asset: assets/fonts/MontserratAlternates/MontserratAlternates-MediumItalic.otf
+        - asset: assets/fonts/MontserratAlternates/MontserratAlternates-Medium.otf
+        - asset: assets/fonts/MontserratAlternates/MontserratAlternates-Regular.otf
+        - asset: assets/fonts/MontserratAlternates/MontserratAlternates-SemiBoldItalic.otf
+        - asset: assets/fonts/MontserratAlternates/MontserratAlternates-SemiBold.otf
+        #- asset: assets/fonts/MontserratAlternates/MontserratAlternates-ThinItalic.otf
+        #- asset: assets/fonts/MontserratAlternates/MontserratAlternates-Thin.otf
+
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

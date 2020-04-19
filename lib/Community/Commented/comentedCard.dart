@@ -85,7 +85,7 @@ class _CommentedCardState extends State<CommentedCard> {
                                     Text(
                                       widget.question,
                                       style: TextStyle(
-                                        fontWeight: FontWeight.bold,
+                                        fontWeight: FontWeight.w500,
                                         fontSize: 16,
                                       ),
                                       overflow: TextOverflow.ellipsis,

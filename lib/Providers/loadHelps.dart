@@ -9,7 +9,7 @@ class LoadHelps extends ChangeNotifier {
   List<dynamic> get getHelpsData {
     return [..._helpsData];
   }
-
+  
   Future<void> fetchHelps() async {
     try {
       final last_timestamp = _helpsData.isNotEmpty

@@ -45,11 +45,20 @@ class _CommentingPageState extends State<CommentingPage> {
     });
   }
 
+  bool isLoadComments = true;
+
   fetchComments() {
     Timer.periodic(Duration(seconds: 5), (timer) async {
       if (mounted && askHelpId != '') {
         await Provider.of<LoadComments>(context, listen: false)
-            .fechComments(askHelpId);
+            .fechComments(askHelpId)
+            .catchError((onError) {
+          snakebar('something when wrong please ckeck your internet!');
+          timer.cancel();
+        });
+        setState(() {
+          isLoadComments = false;
+        });
       } else {
         timer.cancel();
       }
@@ -81,7 +90,7 @@ class _CommentingPageState extends State<CommentingPage> {
             .get(
                 'http://192.168.43.150/agrisen-api/index.php/Community/has_commented?askHelp_id=${int.parse(askHelpId)}&user_id=${int.parse(user_id)}')
             .then((_) {
-              print('has commented: ${json.decode(_.body)}');
+          print('has commented: ${json.decode(_.body)}');
           setState(() {
             _hasCommented = json.decode(_.body);
           });
@@ -145,8 +154,8 @@ class _CommentingPageState extends State<CommentingPage> {
   }
 
   @override
-  void dispose() async {
-    super.dispose();
+  void deactivate() async {
+    super.deactivate();
     if (_hasCommented) {
       final _url =
           'http://192.168.43.150/agrisen-api/index.php/Community/insert_or_update_commented_helps';
@@ -159,7 +168,15 @@ class _CommentingPageState extends State<CommentingPage> {
       }).catchError((onError) {
         print('object: $onError');
       });
+    } else {
+      print('has not commented');
+      tags = [];
     }
+  }
+
+  @override
+  void dispose() async {
+    super.dispose();
     _commentFocusNode.dispose();
     commentText.dispose();
   }
@@ -254,30 +271,6 @@ class _CommentingPageState extends State<CommentingPage> {
             SliverAppBar(
               backgroundColor: Colors.black.withOpacity(0.1),
               expandedHeight: MediaQuery.of(context).size.height * .3,
-              leading: IconButton(
-                icon: Icon(Icons.arrow_back),
-                onPressed: () async {
-                  if (_hasCommented) {
-                    final _url =
-                        'http://192.168.43.150/agrisen-api/index.php/Community/insert_or_update_commented_helps';
-                    await http.post(_url, body: {
-                      'askHelp_id': askHelpId,
-                    }, headers: {
-                      'api_key': api_key
-                    }).then((_) {
-                      tags = [];
-                      Navigator.of(context).pop();
-                    }).catchError((_) {
-                      print('object1: $_');
-                      Navigator.of(context).pop();
-                    });
-                  } else {
-                    print('has not commented');
-                    tags = [];
-                    Navigator.of(context).pop();
-                  }
-                },
-              ),
               elevation: 3,
               pinned: true,
               title: Text(
@@ -324,7 +317,7 @@ class _CommentingPageState extends State<CommentingPage> {
                         : '${help['question']} ?',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       fontSize: 12,
                       color: Colors.white,
                     ),
@@ -344,12 +337,28 @@ class _CommentingPageState extends State<CommentingPage> {
               sliver: parentComments.isEmpty
                   ? SliverFillRemaining(
                       child: Center(
-                        child: Text(
-                          'No comment available yet',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 22,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            if (isLoadComments)
+                              Center(
+                                  child: CircularProgressIndicator(
+                                    backgroundColor: Colors.green,
+                                    strokeWidth: 3,
+                                  ),
+                                ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            Text(
+                              'No comment available yet',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 22,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     )
