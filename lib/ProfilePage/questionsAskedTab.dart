@@ -4,6 +4,7 @@ import 'package:agrisen_app/Community/AskCommunity/askCommunityForm.dart';
 import 'package:agrisen_app/Community/CommentingPage/commentingPage.dart';
 import 'package:agrisen_app/Providers/loadHelps.dart';
 import 'package:agrisen_app/Providers/userInfos.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -83,89 +84,93 @@ class _QuestionsAskedTabState extends State<QuestionsAskedTab>
             ),
           )
         : helps.isNotEmpty
-            ? Column(
-                children: <Widget>[
-                  ...helps.map((help) {
-                    final index = helps.indexOf(help);
-                    final images = json.decode(help['crop_images']);
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: <Widget>[
-                          if (index == 0)
-                            Column(
-                              children: <Widget>[
-                                Text(
-                                  helps != []
-                                      ? 'below is the list of the helps you asked the Community'
-                                      : '',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 30,
-                                ),
-                              ],
-                            ),
-                          ListTile(
-                            leading: InkWell(
-                              onTap: () => Navigator.of(context).pushNamed(
-                                ImagesViewer.namedRoute,
-                                arguments: {
-                                  'from': 'network',
-                                  'images': images
-                                },
-                              ),
-                              child: Image.network(
-                                'http://192.168.43.150/agrisen-api/uploads/ask_helps/${images[0]}',
-                                fit: BoxFit.cover,
-                                width: 90,
-                                height: double.infinity,
-                              ),
-                            ),
-                            title: Text(
-                              help['question'].endsWith('?')
-                                  ? help['question']
-                                  : '${help['question']} ?',
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                CommentingPage.routeName,
-                                arguments: help['askHelp_id'],
-                              );
-                            },
-                            subtitle: Text(help['crop_name']),
-                            trailing: FittedBox(
-                              child: Column(
-                                children: <Widget>[
-                                  IconButton(
-                                    icon: Icon(Icons.delete),
-                                    color: Colors.red,
-                                    onPressed: () => null,
-                                  ),
-                                  Text(
-                                    'delete',
-                                    style: TextStyle(
-                                      color: Colors.red,
+            ? CupertinoScrollbar(
+              child: SingleChildScrollView(
+                child: Column(
+                    children: <Widget>[
+                      ...helps.map((help) {
+                        final index = helps.indexOf(help);
+                        final images = json.decode(help['crop_images']);
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            children: <Widget>[
+                              if (index == 0)
+                                Column(
+                                  children: <Widget>[
+                                    Text(
+                                      helps != []
+                                          ? 'below is the list of the helps you asked the Community'
+                                          : '',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
-                                  )
-                                ],
+                                    SizedBox(
+                                      height: 30,
+                                    ),
+                                  ],
+                                ),
+                              ListTile(
+                                leading: InkWell(
+                                  onTap: () => Navigator.of(context).pushNamed(
+                                    ImagesViewer.namedRoute,
+                                    arguments: {
+                                      'from': 'network',
+                                      'images': images
+                                    },
+                                  ),
+                                  child: Image.network(
+                                    'http://192.168.43.150/agrisen-api/uploads/ask_helps/${images[0]}',
+                                    fit: BoxFit.cover,
+                                    width: 90,
+                                    height: double.infinity,
+                                  ),
+                                ),
+                                title: Text(
+                                  help['question'].endsWith('?')
+                                      ? help['question']
+                                      : '${help['question']} ?',
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    CommentingPage.routeName,
+                                    arguments: help['askHelp_id'],
+                                  );
+                                },
+                                subtitle: Text(help['crop_name']),
+                                trailing: FittedBox(
+                                  child: Column(
+                                    children: <Widget>[
+                                      IconButton(
+                                        icon: Icon(Icons.delete),
+                                        color: Colors.red,
+                                        onPressed: () => null,
+                                      ),
+                                      Text(
+                                        'delete',
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
+                              Divider()
+                            ],
                           ),
-                          Divider()
-                        ],
-                      ),
-                    );
-                  }).toList()
-                ],
-              )
+                        );
+                      }).toList()
+                    ],
+                  ),
+              ),
+            )
             : Opacity(
                 opacity: _value,
                 child: Center(

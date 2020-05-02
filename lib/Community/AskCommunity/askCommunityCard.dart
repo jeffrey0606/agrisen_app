@@ -48,7 +48,7 @@ class _AskCommunityCardState extends State<AskCommunityCard> {
 
    Future getCommentsNumber(String askHelpId) async{
     try {
-      final response = await http.get('http://192.168.43.150/agrisen-api/index.php/Community/number_of_comments/$askHelpId/');
+      final response = await http.get('http://192.168.43.150/agrisen-api/index.php/Community/number_of_comments/$askHelpId');
       if(response != null){
         setState(() {
           commentsNumber = json.decode(response.body);
@@ -144,7 +144,7 @@ class _AskCommunityCardState extends State<AskCommunityCard> {
                                                 nameInitials.toUpperCase(),
                                                 style: TextStyle(
                                                   color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
+                                                  fontWeight: FontWeight.w700,
                                                   fontSize: 18,
                                                 ),
                                               ),

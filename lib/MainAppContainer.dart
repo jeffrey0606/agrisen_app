@@ -324,7 +324,6 @@ class _MainAppContainerState extends State<MainAppContainer> {
                     );
                   },
                   child: FloatingActionButton.extended(
-                    key: UniqueKey(),
                     onPressed: () {
                       if (apiKey != null) {
                         Navigator.pushNamed(
@@ -367,7 +366,6 @@ class _MainAppContainerState extends State<MainAppContainer> {
                       );
                     },
                     child: FloatingActionButton(
-                      key: UniqueKey(),
                       onPressed: () => Navigator.of(context)
                           .pushNamed(DiseaseDetectionPage.nameRoute),
                       child: ImageIcon(

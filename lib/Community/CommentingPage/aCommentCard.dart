@@ -1,7 +1,8 @@
 import 'package:agrisen_app/timeAjuster.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
-class ACommentCard extends StatelessWidget {
+class ACommentCard extends StatefulWidget {
   final String timelapse;
   final List<dynamic> childComments;
   final bool viewReplies;
@@ -25,16 +26,87 @@ class ACommentCard extends StatelessWidget {
   });
 
   @override
+  _ACommentCardState createState() => _ACommentCardState();
+}
+
+class _ACommentCardState extends State<ACommentCard> {
+  @override
   Widget build(BuildContext context) {
+    var nameInitials = '';
+    this.widget.commentorName.split(' ').forEach((f) {
+      setState(() {
+        if (nameInitials.length == 1) {
+          nameInitials += ' ';
+        }
+        nameInitials += '${f.substring(0, 1)}';
+      });
+    });
     return Column(
       children: <Widget>[
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            CircleAvatar(
-              maxRadius: 25,
-              backgroundColor: Colors.blue,
-              backgroundImage: NetworkImage(this.parentProfileImage),
+            ClipRRect(
+              borderRadius: BorderRadius.all(
+                Radius.circular(60),
+              ),
+              child: Container(
+                width: 45,
+                height: 45,
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        //Colors.lime,
+                        //Colors.pink,
+                        Colors.cyan,
+                        Colors.cyanAccent
+                      ]),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(60),
+                  ),
+                ),
+                child: this.widget.parentProfileImage.toString().isEmpty
+                    ? Center(
+                        child: Text(
+                          nameInitials.toUpperCase(),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                      )
+                    : CachedNetworkImage(
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        imageUrl: widget.parentProfileImage
+                                .toString()
+                                .startsWith('https://')
+                            ? widget.parentProfileImage
+                            : 'http://192.168.43.150/agrisen-api/uploads/profile_images/${widget.parentProfileImage}',
+                        errorWidget: (context, str, obj) {
+                          return Center(
+                            child: Text(
+                              nameInitials.toUpperCase(),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 18,
+                              ),
+                            ),
+                          );
+                        },
+                        /*placeholder: (context, str) {
+                                            return SvgPicture.network(
+                                              'http://192.168.43.150/Agrisen_app/assetImages/profileImage.svg',
+                                              width: 115,
+                                            );
+                                          },*/
+                      ),
+              ),
             ),
             SizedBox(
               width: 10,
@@ -47,16 +119,18 @@ class ACommentCard extends StatelessWidget {
                   RichText(
                     text: TextSpan(children: <InlineSpan>[
                       TextSpan(
-                        text: commentorName,
+                        text: widget.commentorName,
                         style: TextStyle(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                           color: Colors.black,
+                          fontFamily: 'MontserratAlternates',
                         ),
                       ),
                       TextSpan(
-                        text: '   $timelapse',
+                        text: '   ${widget.timelapse}',
                         style: TextStyle(
                           color: Colors.grey,
+                          fontFamily: 'MontserratAlternates',
                           fontStyle: FontStyle.italic,
                         ),
                       )
@@ -66,19 +140,20 @@ class ACommentCard extends StatelessWidget {
                     height: 10,
                   ),
                   Text(
-                    parentComment,
+                    widget.parentComment,
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
                       fontSize: 14,
                     ),
                   ),
-                  if (childComments.isEmpty)
+                  if (widget.childComments.isEmpty)
                     SizedBox(
                       height: 25,
                     ),
-                  if (childComments.isNotEmpty)
+                  if (widget.childComments.isNotEmpty)
                     FlatButton.icon(
-                      icon: viewReplies && currentIndex == index
+                      icon: widget.viewReplies &&
+                              widget.currentIndex == widget.index
                           ? Icon(
                               Icons.keyboard_arrow_up,
                               color: Colors.blue,
@@ -91,21 +166,21 @@ class ACommentCard extends StatelessWidget {
                         'view replies',
                         style: TextStyle(color: Colors.blue),
                       ),
-                      onPressed: () => viewRepliesFunction(),
+                      onPressed: () => widget.viewRepliesFunction(),
                     )
                 ],
               ),
             ),
           ],
         ),
-        if (viewReplies && currentIndex == index)
+        if (widget.viewReplies && widget.currentIndex == widget.index)
           Container(
             padding: EdgeInsets.only(
               left: 30.0,
               bottom: 20.0,
             ),
             child: Column(
-              children: childComments.map((comment) {
+              children: widget.childComments.map((comment) {
                 final profileImage = comment['profile_image'];
 
                 print(profileImage);
@@ -147,19 +222,21 @@ class ACommentCard extends StatelessWidget {
                                     nameInitials.toUpperCase(),
                                     style: TextStyle(
                                       color: Colors.white,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w700,
+                                      fontFamily: 'MontserratAlternates',
                                       fontSize: 18,
                                     ),
                                   ),
-                                ))
+                                ),
+                              )
                             : CircleAvatar(
                                 maxRadius: 20,
                                 backgroundColor: Colors.blue,
-                                backgroundImage: NetworkImage(profileImage
-                                        .toString()
-                                        .startsWith('https://')
-                                    ? profileImage
-                                    : 'http://192.168.43.150/agrisen-api/uploads/profile_images/$profileImage'),
+                                backgroundImage: NetworkImage(
+                                  profileImage.toString().startsWith('https://')
+                                      ? profileImage
+                                      : 'http://192.168.43.150/agrisen-api/uploads/profile_images/$profileImage',
+                                ),
                               ),
                         SizedBox(
                           width: 10,
@@ -174,7 +251,8 @@ class ACommentCard extends StatelessWidget {
                                   TextSpan(
                                     text: comment['user_name'],
                                     style: TextStyle(
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w700,
+                                      fontFamily: 'MontserratAlternates',
                                       color: Colors.black,
                                     ),
                                   ),
@@ -183,6 +261,7 @@ class ACommentCard extends StatelessWidget {
                                         '   ${TimeAjuster.ajust(DateTime.parse(comment['comment_timestamp']))}',
                                     style: TextStyle(
                                       color: Colors.grey,
+                                      fontFamily: 'MontserratAlternates',
                                       fontStyle: FontStyle.italic,
                                     ),
                                   )
@@ -194,7 +273,8 @@ class ACommentCard extends StatelessWidget {
                               Text(
                                 comment['comment'],
                                 style: TextStyle(
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'MontserratAlternates',
                                   fontSize: 14,
                                 ),
                               ),

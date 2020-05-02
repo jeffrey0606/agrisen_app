@@ -24,11 +24,10 @@ class _FullArticlePageState extends State<FullArticlePage> {
   double rate = 0.4;
   bool playing = false;
   String title = '', des = '';
+  List<String> text = [];
+  int index;
 
   void iniTts() {
-    /*setState(() {
-      _newVoiceText = 'Bonjour Jumper, comment tu vas ?';
-    });*/
     flutterTts.setStartHandler(() {
       setState(() {
         print('start');
@@ -36,10 +35,16 @@ class _FullArticlePageState extends State<FullArticlePage> {
     });
 
     flutterTts.setCompletionHandler(() {
-      setState(() {
+      index++;
+      if(index == text.length){
+        setState(() {
         print('complete');
         playing = false;
+        index = 0;
       });
+      } else {
+        _speak(text[index], 'en-US');
+      }
     });
 
     flutterTts.setErrorHandler((msg) {
@@ -119,8 +124,6 @@ class _FullArticlePageState extends State<FullArticlePage> {
     speechText = speechText.replaceAll("\n", " ");
     //data = data.replaceAll(new RegExp(r''), "");
 
-    print(speechText);
-
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
@@ -136,7 +139,7 @@ class _FullArticlePageState extends State<FullArticlePage> {
                   label: Text('stop'),
                 )
               : FlatButton.icon(
-                  onPressed: () => _speak(speechText, 'en-US'),
+                  onPressed: () => _speak(text.isEmpty ? speechText : text[0], 'en-US'),
                   icon: Icon(Icons.play_arrow),
                   label: Text('play'),
                 )
@@ -151,8 +154,27 @@ class _FullArticlePageState extends State<FullArticlePage> {
             case ConnectionState.done:
               if (snapshot.hasData) {
                 http.Response data = snapshot.data;
-                final article = json.decode(data.body);
-                speechText = article['article_text'];
+                final article = json.decode(data.body) as Map<String, dynamic>;
+                final length = article['article_text'].length;
+                int iterations = (length / 3600).ceil();
+                if (length / 3600 > 1) {
+                  for (var i = 0; i < iterations; i++) {
+                    if ((iterations - 1) - i != 0) {
+                      var end = 3600;
+                      text.insert(i, article['article_text'].substring(i * 3600, end + 1));
+                      end += 3600;
+                    } else {
+                      print('object: $i');
+                      text.insert(i, article['article_text'].substring((i * 3600) + 1));
+                    }
+                  }
+                  text.removeRange(iterations, text.length);
+                  print('text: ${text.length}');
+                } else {
+                  speechText = article['article_text'];
+                }
+
+                print('lenght: ${speechText.length}');
                 return CupertinoScrollbar(
                   child: SingleChildScrollView(
                     child: Padding(
@@ -174,7 +196,7 @@ class _FullArticlePageState extends State<FullArticlePage> {
                             height: 15,
                           ),
                           Html(
-                            data: article['article'],
+                            data: article['article_text'],
                           ),
                           SizedBox(
                             height: 10,

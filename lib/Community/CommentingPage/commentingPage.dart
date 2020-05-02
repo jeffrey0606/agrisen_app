@@ -196,7 +196,7 @@ class _CommentingPageState extends State<CommentingPage> {
 
       final response = await http.post(url, body: {
         'askHelp_id': askHelpId,
-        'parent_comment_id': json.encode(parentCommentId),
+        'parent_comment_id': parentCommentId == null ? json.encode(null) : parentCommentId,
         'comment': commentText.text,
         'tags': tag
       }, headers: {
@@ -217,7 +217,7 @@ class _CommentingPageState extends State<CommentingPage> {
             'api_key': api_key
           }).then((_) async {
             setState(() {
-              _parentCommentId = '';
+              _parentCommentId = null;
               commentText.text = '';
               _isReplying = false;
               tags = [];
@@ -226,7 +226,7 @@ class _CommentingPageState extends State<CommentingPage> {
                 .fechComments(askHelpId);
           }).catchError((err) {
             setState(() {
-              _parentCommentId = '';
+              _parentCommentId = null;
               _isReplying = false;
               tags = [];
             });
@@ -234,7 +234,7 @@ class _CommentingPageState extends State<CommentingPage> {
           });
         } else {
           setState(() {
-            _parentCommentId = '';
+            _parentCommentId = null;
             _isReplying = false;
             tags = [];
           });
@@ -243,7 +243,7 @@ class _CommentingPageState extends State<CommentingPage> {
       }
     } catch (e) {
       setState(() {
-        _parentCommentId = '';
+        _parentCommentId = null;
         _isReplying = false;
       });
       tags = [];

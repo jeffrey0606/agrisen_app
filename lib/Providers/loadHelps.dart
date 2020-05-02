@@ -9,7 +9,7 @@ class LoadHelps extends ChangeNotifier {
   List<dynamic> get getHelpsData {
     return [..._helpsData];
   }
-  
+
   Future<void> fetchHelps() async {
     try {
       final last_timestamp = _helpsData.isNotEmpty
@@ -31,19 +31,19 @@ class LoadHelps extends ChangeNotifier {
               print('object');
               _helpsData = ['a'];
             }
+            notifyListeners();
           } else {
             print('result1: $result');
             for (int i = 0; i < result.length; i++) {
-              _helpsData.insert(i, _helpsData[i]);
+              _helpsData.insert(i, result[i]);
             }
+            notifyListeners();
           }
         }
       }
-      notifyListeners();
     } catch (err) {
       throw err;
     }
-    notifyListeners();
   }
 
   dynamic getHelp(String helpId) {

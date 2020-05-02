@@ -45,7 +45,6 @@ class _QuestionsAskedState extends State<QuestionsAsked> {
   Widget build(BuildContext context) {
     final loadhelps = Provider.of<LoadHelps>(context);
     final helpsData = loadhelps.getHelpsData;
-    print(helpsData);
     return error
         ? Container(
             padding: EdgeInsets.symmetric(horizontal: 15),
@@ -92,8 +91,20 @@ class _QuestionsAskedState extends State<QuestionsAsked> {
                         ),
                       )
                     : ListView.builder(
+                      key: UniqueKey(),
                         itemCount: helpsData.length,
                         itemBuilder: (buildContext, index) {
+                           final profileImage = helpsData[index]['profile_image'];
+
+                print(profileImage);
+
+                var nameInitials = '';
+                helpsData[index]['user_name'].split(' ').forEach((f) {
+                  if (nameInitials.length == 1) {
+                    nameInitials += ' ';
+                  }
+                  nameInitials += '${f.substring(0, 1)}';
+                });
                           return Container(
                             child: AskCommunityCard(
                               cropName: helpsData[index]['crop_name'],
@@ -126,6 +137,13 @@ class QuestionAskedSkeletonWidget extends StatefulWidget {
 
 class _QuestionAskedSkeletonWidgetState
     extends State<QuestionAskedSkeletonWidget> {
+  
+  @override
+  void dispose() {
+    super.dispose();
+    
+  }
+  
   @override
   void initState() {
     // TODO: implement initState
@@ -134,7 +152,7 @@ class _QuestionAskedSkeletonWidgetState
   }
 
   bool _animateOpacity = true, val = true;
-
+  
   startAnimation() {
     Timer.periodic(Duration(milliseconds: 600), (timer) {
       if (mounted) {

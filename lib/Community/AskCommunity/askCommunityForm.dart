@@ -27,7 +27,6 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
   int questionLenght = 0, cropNamelenght = 0;
   String question = '', cropName = '';
   bool _isLoading = false;
-  Directory directory;
 
   void getImage(ImageSource imageSource, {int key, String profileImage}) async {
     File _image = await ImagePicker.pickImage(source: imageSource);
@@ -43,13 +42,6 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
     setState(() {
       _images.update(key, (_) => result);
     });
-  }
-
-  String reverseString(String string) {
-    List<String> list = string.split('').reversed.toList();
-    String temp = '';
-    list.forEach((f) => temp += f);
-    return temp;
   }
 
   final _formKey = GlobalKey<FormState>();
@@ -73,20 +65,17 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
           });
           final formData = FormData.fromMap({
             'crop_images': [
-              await MultipartFile.fromFile(_images[5].path,
-                  filename: basename(_images[5].path)),
+              await MultipartFile.fromFile(_images[5].path),
               if (_images[4] != null)
-                await MultipartFile.fromFile(_images[4].path,
-                    filename: basename(_images[4].path)),
+                await MultipartFile.fromFile(_images[4].path),
               if (_images[3] != null)
-                await MultipartFile.fromFile(_images[3].path,
-                    filename: basename(_images[3].path)),
+                await MultipartFile.fromFile(_images[3].path),
               if (_images[2] != null)
-                await MultipartFile.fromFile(_images[2].path,
-                    filename: basename(_images[2].path)),
+                await MultipartFile.fromFile(_images[2].path),
               if (_images[1] != null)
-                await MultipartFile.fromFile(_images[1].path,
-                    filename: basename(_images[1].path)),
+                await MultipartFile.fromFile(
+                  _images[1].path,
+                ),
             ],
             'crop_name': cropName,
             'question': question,
@@ -179,12 +168,6 @@ class _AskCommunityFormState extends State<AskCommunityForm> {
     4: null,
     5: null,
   };
-
-  @override
-  void deactivate() async{
-    super.deactivate();
-    if (directory != null) await directory.delete(recursive: true);
-  }
 
   @override
   Widget build(BuildContext context) {

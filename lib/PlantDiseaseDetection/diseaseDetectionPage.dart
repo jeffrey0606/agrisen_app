@@ -73,10 +73,12 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
     interpreter = FirebaseModelInterpreter.instance;
     manager = FirebaseModelManager.instance;
 
-    manager.registerRemoteModelSource(FirebaseRemoteModelSource(
-      modelName: 'test_model1',
-      enableModelUpdates: true,
-    ));
+    manager.registerRemoteModelSource(
+      FirebaseRemoteModelSource(
+        modelName: 'test_model1',
+        enableModelUpdates: true,
+      ),
+    );
 
     rootBundle.loadString('assets/plant_labels.txt').then((string) {
       setState(() {
